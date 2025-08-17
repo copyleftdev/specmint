@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -333,15 +334,95 @@ func (g *DeterministicGenerator) generatePhone(rng *mathrand.Rand) string {
 }
 
 func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathrand.Rand) (string, error) {
-	// Simple pattern generation - could be enhanced with proper regex generation
-	// For now, generate a string that might match common patterns
-
-	if strings.Contains(pattern, "[0-9]") {
-		// Numeric pattern
-		return fmt.Sprintf("%d", rng.Intn(1000000)), nil
+	// Enhanced pattern generation with specific pattern recognition
+	
+	// Handle common e-commerce patterns
+	switch pattern {
+	case "^[A-Z]{2}[0-9]{6}$":
+		// SKU format: 2 uppercase letters + 6 digits
+		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		result := make([]rune, 8)
+		result[0] = letters[rng.Intn(len(letters))]
+		result[1] = letters[rng.Intn(len(letters))]
+		for i := 2; i < 8; i++ {
+			result[i] = rune('0' + rng.Intn(10))
+		}
+		return string(result), nil
+		
+	case "^PRD[0-9]{8}$":
+		// Product ID format: PRD + 8 digits
+		return fmt.Sprintf("PRD%08d", rng.Intn(100000000)), nil
+		
+	case "^PRD-[0-9]{6}$":
+		// Product ID format: PRD- + 6 digits
+		return fmt.Sprintf("PRD-%06d", rng.Intn(1000000)), nil
+		
+	case "^WH[0-9]{3}$":
+		// Warehouse format: WH + 3 digits
+		return fmt.Sprintf("WH%03d", rng.Intn(1000)), nil
+		
+	case "^SUP[0-9]{5}$":
+		// Supplier format: SUP + 5 digits
+		return fmt.Sprintf("SUP%05d", rng.Intn(100000)), nil
+		
+	case "^TXN-[0-9]{10}$":
+		// Transaction ID format: TXN- + 10 digits
+		return fmt.Sprintf("TXN-%010d", rng.Intn(1000000000)), nil
+		
+	case "^[0-9]{10}$":
+		// 10 digit number (account numbers, NPI)
+		return fmt.Sprintf("%010d", rng.Intn(1000000000)), nil
+		
+	case "^[0-9]{9}$":
+		// 9 digit number (routing numbers)
+		return fmt.Sprintf("%09d", rng.Intn(1000000000)), nil
+		
+	case "^[0-9]{4}$":
+		// 4 digit number (MCC codes)
+		return fmt.Sprintf("%04d", rng.Intn(10000)), nil
+		
+	case "^[0-9]{5}$":
+		// 5 digit number (procedure codes)
+		return fmt.Sprintf("%05d", rng.Intn(100000)), nil
+		
+	case "^[A-Z][0-9]{2}\\.[0-9]{1,2}$":
+		// ICD-10 format: Letter + 2 digits + dot + 1-2 digits
+		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		letter := letters[rng.Intn(len(letters))]
+		first := rng.Intn(100)
+		second := rng.Intn(100)
+		return fmt.Sprintf("%c%02d.%02d", letter, first, second), nil
+		
+	case "^[A-Z]{2}-[A-Z]{3}-[0-9]{3}$":
+		// Warehouse location format: XX-XXX-000
+		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		result := make([]rune, 9)
+		result[0] = letters[rng.Intn(len(letters))]
+		result[1] = letters[rng.Intn(len(letters))]
+		result[2] = '-'
+		result[3] = letters[rng.Intn(len(letters))]
+		result[4] = letters[rng.Intn(len(letters))]
+		result[5] = letters[rng.Intn(len(letters))]
+		result[6] = '-'
+		result[7] = rune('0' + rng.Intn(10))
+		result[8] = rune('0' + rng.Intn(10))
+		result = append(result, rune('0' + rng.Intn(10)))
+		return string(result), nil
 	}
 
-	if strings.Contains(pattern, "[a-zA-Z]") {
+	// Fallback: analyze pattern structure
+	if strings.Contains(pattern, "[0-9]") && strings.Contains(pattern, "[A-Z]") {
+		// Mixed alphanumeric pattern
+		return g.generateMixedPattern(pattern, rng)
+	}
+	
+	if strings.Contains(pattern, "[0-9]") {
+		// Numeric pattern - extract length from pattern
+		length := g.extractNumericLength(pattern)
+		return fmt.Sprintf("%0*d", length, rng.Intn(int(math.Pow(10, float64(length))))), nil
+	}
+
+	if strings.Contains(pattern, "[a-zA-Z]") || strings.Contains(pattern, "[A-Z]") {
 		// Alphabetic pattern
 		return g.generateRandomString(8, rng), nil
 	}
@@ -359,4 +440,27 @@ func (g *DeterministicGenerator) generateRandomString(length int, rng *mathrand.
 	}
 
 	return string(result)
+}
+
+// generateMixedPattern generates strings for mixed alphanumeric patterns
+func (g *DeterministicGenerator) generateMixedPattern(pattern string, rng *mathrand.Rand) (string, error) {
+	// Simple implementation for mixed patterns
+	// This could be enhanced with proper regex parsing
+	return g.generateRandomString(8, rng), nil
+}
+
+// extractNumericLength extracts the expected length from numeric patterns
+func (g *DeterministicGenerator) extractNumericLength(pattern string) int {
+	// Extract length from patterns like [0-9]{6} or {10}
+	if strings.Contains(pattern, "{") && strings.Contains(pattern, "}") {
+		start := strings.Index(pattern, "{") + 1
+		end := strings.Index(pattern, "}")
+		if end > start {
+			if length, err := strconv.Atoi(pattern[start:end]); err == nil {
+				return length
+			}
+		}
+	}
+	// Default length for numeric patterns
+	return 6
 }

@@ -171,7 +171,8 @@
       "name": "price_consistency",
       "description": "Current price should not exceed original price",
       "fields": ["price", "original_price"],
-      "rule": "amount_range",
+      "rule": "comparison",
+      "constraint": "price <= original_price",
       "severity": "error",
       "patch": {
         "strategy": "set_value",
@@ -183,7 +184,8 @@
       "name": "cost_margin",
       "description": "Price should be higher than cost for profitability",
       "fields": ["cost", "price"],
-      "rule": "amount_range",
+      "rule": "comparison",
+      "constraint": "price >= cost * 1.2",
       "severity": "warning",
       "patch": {
         "strategy": "set_value",

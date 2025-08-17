@@ -51,7 +51,8 @@ type CrossFieldRule struct {
 	Description string     `json:"description"`
 	Fields      []string   `json:"fields"`
 	Rule        string     `json:"rule"`
-	Severity    string     `json:"severity"` // error, warning
+	Constraint  string     `json:"constraint,omitempty"` // for comparison rules
+	Severity    string     `json:"severity"`             // error, warning
 	Patch       *PatchRule `json:"patch,omitempty"`
 }
 
@@ -208,6 +209,9 @@ func (p *Parser) buildNode(raw map[string]interface{}, path string, required boo
 				}
 				if ruleStr, ok := ruleMap["rule"].(string); ok {
 					rule.Rule = ruleStr
+				}
+				if constraint, ok := ruleMap["constraint"].(string); ok {
+					rule.Constraint = constraint
 				}
 				if severity, ok := ruleMap["severity"].(string); ok {
 					rule.Severity = severity

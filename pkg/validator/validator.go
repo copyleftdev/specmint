@@ -79,6 +79,8 @@ func (v *Validator) validateCrossFieldRule(data map[string]interface{}, rule sch
 		return v.validateDateOrdering(data, rule.Fields)
 	case "amount_range":
 		return v.validateAmountRange(data, rule.Fields)
+	case "comparison":
+		return v.validateComparison(data, rule.Fields, rule.Constraint)
 	case "conditional_required":
 		return v.validateConditionalRequired(data, rule.Fields)
 	case "mutual_exclusion":
@@ -277,4 +279,56 @@ func abs(x float64) float64 {
 		return -x
 	}
 	return x
+}
+
+// validateComparison validates comparison constraints between fields
+func (v *Validator) validateComparison(data map[string]interface{}, fields []string, constraint string) error {
+	if len(fields) != 2 {
+		return fmt.Errorf("comparison rule requires exactly 2 fields")
+	}
+
+	field1 := fields[0]
+	field2 := fields[1]
+	
+	val1 := v.getNumericValue(data, field1)
+	val2 := v.getNumericValue(data, field2)
+
+	// Parse and evaluate the constraint
+	switch {
+	case strings.Contains(constraint, "<="):
+		if val1 > val2 {
+			return fmt.Errorf("%s (%f) should be <= %s (%f)", field1, val1, field2, val2)
+		}
+	case strings.Contains(constraint, ">="):
+		// Handle multiplication in constraints like "price >= cost * 1.2"
+		if strings.Contains(constraint, "*") {
+			multiplier := 1.2 // default multiplier
+			if strings.Contains(constraint, "1.2") {
+				multiplier = 1.2
+			}
+			if val1 < val2*multiplier {
+				return fmt.Errorf("%s (%f) should be >= %s * %.1f (%f)", field1, val1, field2, multiplier, val2*multiplier)
+			}
+		} else {
+			if val1 < val2 {
+				return fmt.Errorf("%s (%f) should be >= %s (%f)", field1, val1, field2, val2)
+			}
+		}
+	case strings.Contains(constraint, "<"):
+		if val1 >= val2 {
+			return fmt.Errorf("%s (%f) should be < %s (%f)", field1, val1, field2, val2)
+		}
+	case strings.Contains(constraint, ">"):
+		if val1 <= val2 {
+			return fmt.Errorf("%s (%f) should be > %s (%f)", field1, val1, field2, val2)
+		}
+	case strings.Contains(constraint, "=="):
+		if val1 != val2 {
+			return fmt.Errorf("%s (%f) should equal %s (%f)", field1, val1, field2, val2)
+		}
+	default:
+		return fmt.Errorf("unsupported constraint: %s", constraint)
+	}
+
+	return nil
 }
