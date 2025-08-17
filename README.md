@@ -1,5 +1,9 @@
 # SpecMint: Synthetic Dataset Generator
 
+<div align="center">
+  <img src="media/specmint.png" alt="SpecMint Logo" width="200"/>
+</div>
+
 [![CI/CD Pipeline](https://github.com/copyleftdev/specmint/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/specmint/actions/workflows/ci.yml)
 [![Security Audit](https://github.com/copyleftdev/specmint/actions/workflows/security.yml/badge.svg)](https://github.com/copyleftdev/specmint/actions/workflows/security.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/copyleftdev/specmint)](https://goreportcard.com/report/github.com/copyleftdev/specmint)
