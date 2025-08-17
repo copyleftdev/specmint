@@ -1,6 +1,6 @@
 # SpecMint: Synthetic Dataset Generator
 
-<div align="center">a
+<div align="center">
   <img src="media/specmint.png" alt="SpecMint Logo" width="200"/>
 </div>
 
