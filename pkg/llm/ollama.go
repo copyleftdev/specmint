@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/sony/gobreaker"
 	"golang.org/x/time/rate"
 )
@@ -168,6 +170,11 @@ func (c *OllamaClient) HealthCheck(ctx context.Context) error {
 
 // Generate generates text using Ollama with the given prompt and seed
 func (c *OllamaClient) Generate(ctx context.Context, prompt string, seed int64) (string, error) {
+	// Skip LLM calls in CI environment
+	if os.Getenv("SKIP_OLLAMA_TESTS") == "true" {
+		log.Debug().Msg("Skipping Ollama call in CI environment")
+		return "", fmt.Errorf("ollama disabled in CI environment")
+	}
 	// Wait for rate limit
 	if err := c.rateLimiter.Wait(ctx); err != nil {
 		return "", fmt.Errorf("rate limit wait failed: %w", err)

@@ -1,0 +1,326 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.25.0'
+  GOLANGCI_LINT_VERSION: 'v1.55.2'
+
+jobs:
+  # ============================================================================
+  # CODE QUALITY & LINTING
+  # ============================================================================
+  lint:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Verify Dependencies
+        run: go mod verify
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --config .golangci.yml --timeout 5m
+
+      - name: Check Go Format
+        run: |
+          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+            echo "Code is not formatted properly:"
+            gofmt -s -l .
+            exit 1
+          fi
+
+      - name: Check Go Vet
+        run: go vet ./...
+
+  # ============================================================================
+  # SECURITY SCANNING
+  # ============================================================================
+  security:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Security Tools
+        run: |
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          go install github.com/sonatype-nexus-community/nancy@latest
+
+      - name: Run GoSec Security Scanner
+        run: |
+          gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text ./...
+
+      - name: Run Go Vulnerability Check
+        run: |
+          govulncheck ./...
+
+      - name: Run Nancy Dependency Scanner
+        run: |
+          go list -json -deps ./... | nancy sleuth
+
+      - name: Upload GoSec Results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
+
+  # ============================================================================
+  # BUILD & TEST MATRIX
+  # ============================================================================
+  test:
+    name: Build & Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ['1.24.x', '1.25.x']
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+      - name: Download Dependencies
+        run: go mod download
+
+      - name: Build Application
+        run: go build -v ./...
+
+      - name: Run Unit Tests
+        env:
+          SKIP_OLLAMA_TESTS: "true"  # Skip Ollama tests in CI
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Generate Coverage Report
+        run: go tool cover -html=coverage.out -o coverage.html
+
+      - name: Upload Coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == '1.25.x'
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out
+          flags: unittests
+          name: codecov-umbrella
+
+  # ============================================================================
+  # GOLDEN DATASET TESTING
+  # ============================================================================
+  golden-tests:
+    name: Golden Dataset Validation
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build SpecMint
+        run: |
+          mkdir -p bin
+          go build -o bin/specmint ./cmd/specmint
+
+      - name: Run Golden Dataset Tests
+        env:
+          SKIP_OLLAMA_TESTS: "true"  # Skip Ollama connectivity tests
+        run: |
+          chmod +x test/golden-test-suite.sh
+          ./test/golden-test-suite.sh
+
+      - name: Upload Golden Test Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: golden-test-failures
+          path: |
+            output/
+            test/golden/
+
+  # ============================================================================
+  # PERFORMANCE BENCHMARKING
+  # ============================================================================
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build SpecMint
+        run: |
+          mkdir -p bin
+          go build -o bin/specmint ./cmd/specmint
+
+      - name: Run Performance Benchmarks
+        run: |
+          ./bin/specmint benchmark -s test/schemas/simple/person.json --counts 100,1000,5000 --output benchmark-results.json
+
+      - name: Upload Benchmark Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: benchmark-results
+          path: benchmark-results.json
+
+  # ============================================================================
+  # RELEASE PREPARATION
+  # ============================================================================
+  release-check:
+    name: Release Readiness
+    runs-on: ubuntu-latest
+    needs: [lint, security, test, golden-tests]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build Multi-Platform Binaries
+        run: |
+          mkdir -p dist
+          
+          # Linux AMD64
+          GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o dist/specmint-linux-amd64 ./cmd/specmint
+          
+          # Linux ARM64
+          GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -o dist/specmint-linux-arm64 ./cmd/specmint
+          
+          # macOS AMD64
+          GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -o dist/specmint-darwin-amd64 ./cmd/specmint
+          
+          # macOS ARM64 (Apple Silicon)
+          GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -o dist/specmint-darwin-arm64 ./cmd/specmint
+          
+          # Windows AMD64
+          GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -o dist/specmint-windows-amd64.exe ./cmd/specmint
+
+      - name: Generate Checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Upload Release Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-binaries
+          path: dist/
+
+  # ============================================================================
+  # DEPLOYMENT STATUS
+  # ============================================================================
+  status:
+    name: Pipeline Status
+    runs-on: ubuntu-latest
+    needs: [lint, security, test, golden-tests]
+    if: always()
+    steps:
+      - name: Check Pipeline Status
+        run: |
+          echo "Pipeline Status Summary:"
+          echo "Lint: ${{ needs.lint.result }}"
+          echo "Security: ${{ needs.security.result }}"
+          echo "Test: ${{ needs.test.result }}"
+          echo "Golden Tests: ${{ needs.golden-tests.result }}"
+          
+          if [[ "${{ needs.lint.result }}" == "success" && 
+                "${{ needs.security.result }}" == "success" && 
+                "${{ needs.test.result }}" == "success" && 
+                "${{ needs.golden-tests.result }}" == "success" ]]; then
+            echo "✅ All pipeline stages passed successfully!"
+            exit 0
+          else
+            echo "❌ Pipeline failed - check individual job results"
+            exit 1
+          fi

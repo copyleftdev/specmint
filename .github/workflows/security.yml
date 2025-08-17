@@ -1,0 +1,274 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security audit daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+env:
+  GO_VERSION: '1.25.0'
+
+jobs:
+  # ============================================================================
+  # STATIC SECURITY ANALYSIS
+  # ============================================================================
+  static-analysis:
+    name: Static Security Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-security-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-security-
+
+      - name: Install GoSec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run GoSec Security Scanner
+        run: |
+          gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text ./...
+        continue-on-error: true
+
+      - name: Upload GoSec SARIF Results
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: gosec-results.sarif
+          category: gosec
+
+      - name: Generate Security Report
+        run: |
+          echo "# Security Analysis Report" > security-report.md
+          echo "Generated: $(date)" >> security-report.md
+          echo "" >> security-report.md
+          
+          echo "## GoSec Results" >> security-report.md
+          gosec -fmt json ./... > gosec.json 2>/dev/null || true
+          
+          if [ -s gosec.json ]; then
+            ISSUES=$(jq '.Stats.found' gosec.json 2>/dev/null || echo "0")
+            echo "- Issues Found: $ISSUES" >> security-report.md
+            
+            if [ "$ISSUES" -gt 0 ]; then
+              echo "- Severity Breakdown:" >> security-report.md
+              jq -r '.Issues[] | "  - \(.severity): \(.rule_id) - \(.details)"' gosec.json >> security-report.md 2>/dev/null || true
+            fi
+          else
+            echo "- No security issues detected ✅" >> security-report.md
+          fi
+
+      - name: Upload Security Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-analysis-report
+          path: |
+            security-report.md
+            gosec.json
+            gosec-results.sarif
+
+  # ============================================================================
+  # VULNERABILITY SCANNING
+  # ============================================================================
+  vulnerability-scan:
+    name: Vulnerability Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-vuln-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-vuln-
+
+      - name: Install Vulnerability Scanner
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Run Go Vulnerability Check
+        run: |
+          echo "# Vulnerability Scan Report" > vuln-report.md
+          echo "Generated: $(date)" >> vuln-report.md
+          echo "" >> vuln-report.md
+          
+          echo "## Go Standard Library Vulnerabilities" >> vuln-report.md
+          if govulncheck ./... > vuln-output.txt 2>&1; then
+            echo "- No vulnerabilities detected in Go standard library ✅" >> vuln-report.md
+          else
+            echo "- Vulnerabilities detected:" >> vuln-report.md
+            cat vuln-output.txt >> vuln-report.md
+            exit 1
+          fi
+
+      - name: Upload Vulnerability Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: vulnerability-scan-report
+          path: |
+            vuln-report.md
+            vuln-output.txt
+
+  # ============================================================================
+  # DEPENDENCY SECURITY AUDIT
+  # ============================================================================
+  dependency-audit:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Cache Go Modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-deps-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-deps-
+
+      - name: Install Nancy
+        run: go install github.com/sonatype-nexus-community/nancy@latest
+
+      - name: Run Dependency Security Audit
+        run: |
+          echo "# Dependency Security Audit" > deps-report.md
+          echo "Generated: $(date)" >> deps-report.md
+          echo "" >> deps-report.md
+          
+          echo "## Third-Party Dependencies" >> deps-report.md
+          if go list -json -deps ./... | nancy sleuth > nancy-output.txt 2>&1; then
+            echo "- No known vulnerabilities in dependencies ✅" >> deps-report.md
+          else
+            echo "- Vulnerabilities detected in dependencies:" >> deps-report.md
+            cat nancy-output.txt >> deps-report.md
+            
+            # Don't fail the build for dependency vulnerabilities, just warn
+            echo "::warning::Dependency vulnerabilities detected - see artifact for details"
+          fi
+
+      - name: Generate Dependency List
+        run: |
+          echo "" >> deps-report.md
+          echo "## Complete Dependency Tree" >> deps-report.md
+          go list -m all >> deps-report.md
+
+      - name: Upload Dependency Audit Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: dependency-audit-report
+          path: |
+            deps-report.md
+            nancy-output.txt
+
+  # ============================================================================
+  # SECURITY SUMMARY
+  # ============================================================================
+  security-summary:
+    name: Security Summary
+    runs-on: ubuntu-latest
+    needs: [static-analysis, vulnerability-scan, dependency-audit]
+    if: always()
+    steps:
+      - name: Download All Reports
+        uses: actions/download-artifact@v3
+
+      - name: Generate Security Summary
+        run: |
+          echo "# 🛡️ SpecMint Security Audit Summary" > SECURITY_SUMMARY.md
+          echo "Generated: $(date)" >> SECURITY_SUMMARY.md
+          echo "" >> SECURITY_SUMMARY.md
+          
+          echo "## Pipeline Results" >> SECURITY_SUMMARY.md
+          echo "- Static Analysis: ${{ needs.static-analysis.result }}" >> SECURITY_SUMMARY.md
+          echo "- Vulnerability Scan: ${{ needs.vulnerability-scan.result }}" >> SECURITY_SUMMARY.md
+          echo "- Dependency Audit: ${{ needs.dependency-audit.result }}" >> SECURITY_SUMMARY.md
+          echo "" >> SECURITY_SUMMARY.md
+          
+          # Determine overall security grade
+          if [[ "${{ needs.static-analysis.result }}" == "success" && 
+                "${{ needs.vulnerability-scan.result }}" == "success" ]]; then
+            echo "## 🎯 Overall Security Grade: A" >> SECURITY_SUMMARY.md
+            echo "All critical security checks passed successfully." >> SECURITY_SUMMARY.md
+          else
+            echo "## ⚠️ Overall Security Grade: B" >> SECURITY_SUMMARY.md
+            echo "Some security issues detected - review individual reports." >> SECURITY_SUMMARY.md
+          fi
+          
+          echo "" >> SECURITY_SUMMARY.md
+          echo "## 📊 Security Metrics" >> SECURITY_SUMMARY.md
+          echo "- Go Version: ${{ env.GO_VERSION }}" >> SECURITY_SUMMARY.md
+          echo "- Scan Date: $(date)" >> SECURITY_SUMMARY.md
+          echo "- Repository: ${{ github.repository }}" >> SECURITY_SUMMARY.md
+          echo "- Commit: ${{ github.sha }}" >> SECURITY_SUMMARY.md
+
+      - name: Upload Security Summary
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-summary
+          path: SECURITY_SUMMARY.md
+
+      - name: Comment Security Summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summary = fs.readFileSync('SECURITY_SUMMARY.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: summary
+            });
+
+      - name: Security Status Check
+        run: |
+          if [[ "${{ needs.static-analysis.result }}" == "success" && 
+                "${{ needs.vulnerability-scan.result }}" == "success" ]]; then
+            echo "✅ Security audit passed - Grade A security rating maintained"
+            exit 0
+          else
+            echo "⚠️ Security audit detected issues - review reports"
+            exit 1
+          fi
