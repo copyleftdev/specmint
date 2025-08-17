@@ -24,18 +24,18 @@ func NewDomainValidator() *DomainValidator {
 	dv := &DomainValidator{
 		rules: make(map[string][]ValidationRule),
 	}
-	
+
 	dv.registerHealthcareRules()
 	dv.registerFintechRules()
 	dv.registerEcommerceRules()
-	
+
 	return dv
 }
 
 // ValidateDomain validates data against domain-specific rules
 func (dv *DomainValidator) ValidateDomain(domain string, data map[string]interface{}) []error {
 	var errors []error
-	
+
 	if rules, exists := dv.rules[domain]; exists {
 		for _, rule := range rules {
 			if err := rule.Validator(data); err != nil {
@@ -43,7 +43,7 @@ func (dv *DomainValidator) ValidateDomain(domain string, data map[string]interfa
 			}
 		}
 	}
-	
+
 	return errors
 }
 
@@ -93,7 +93,7 @@ func (dv *DomainValidator) registerHealthcareRules() {
 			Validator: func(data map[string]interface{}) error {
 				var dob, serviceDate, submittedDate time.Time
 				var err error
-				
+
 				// Extract dates
 				if patient, ok := data["patient"].(map[string]interface{}); ok {
 					if demo, ok := patient["demographics"].(map[string]interface{}); ok {
@@ -105,7 +105,7 @@ func (dv *DomainValidator) registerHealthcareRules() {
 						}
 					}
 				}
-				
+
 				if billing, ok := data["billing"].(map[string]interface{}); ok {
 					if serviceStr, ok := billing["service_date"].(string); ok {
 						serviceDate, err = time.Parse("2006-01-02", serviceStr)
@@ -120,16 +120,16 @@ func (dv *DomainValidator) registerHealthcareRules() {
 						}
 					}
 				}
-				
+
 				// Validate ordering
 				if !dob.IsZero() && !serviceDate.IsZero() && dob.After(serviceDate) {
 					return fmt.Errorf("DOB (%s) cannot be after service date (%s)", dob.Format("2006-01-02"), serviceDate.Format("2006-01-02"))
 				}
-				
+
 				if !serviceDate.IsZero() && !submittedDate.IsZero() && serviceDate.After(submittedDate) {
 					return fmt.Errorf("service date (%s) cannot be after submitted date (%s)", serviceDate.Format("2006-01-02"), submittedDate.Format("2006-01-02"))
 				}
-				
+
 				return nil
 			},
 		},
@@ -346,14 +346,14 @@ func isValidRoutingNumber(routing string) bool {
 	if len(routing) != 9 {
 		return false
 	}
-	
+
 	// Check if all characters are digits
 	for _, char := range routing {
 		if char < '0' || char > '9' {
 			return false
 		}
 	}
-	
+
 	// Simple checksum validation (ABA algorithm)
 	sum := 0
 	for i, char := range routing {
@@ -361,7 +361,7 @@ func isValidRoutingNumber(routing string) bool {
 		weight := []int{3, 7, 1, 3, 7, 1, 3, 7, 1}[i]
 		sum += digit * weight
 	}
-	
+
 	return sum%10 == 0
 }
 

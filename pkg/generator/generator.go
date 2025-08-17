@@ -17,12 +17,12 @@ import (
 
 // Generator orchestrates the synthetic data generation process
 type Generator struct {
-	config     *config.Config
-	parser     *schema.Parser
-	detGen     *DeterministicGenerator
-	llmClient  LLMClient
-	validator  *validator.Validator
-	writer     *writer.Writer
+	config    *config.Config
+	parser    *schema.Parser
+	detGen    *DeterministicGenerator
+	llmClient LLMClient
+	validator *validator.Validator
+	writer    *writer.Writer
 }
 
 // LLMClient interface for LLM providers
@@ -34,12 +34,12 @@ type LLMClient interface {
 
 // GenerationResult contains the results of a generation run
 type GenerationResult struct {
-	RecordCount    int           `json:"record_count"`
-	Duration       time.Duration `json:"duration"`
-	OutputPath     string        `json:"output_path"`
-	LLMCallCount   int           `json:"llm_call_count"`
-	ValidationErrors int         `json:"validation_errors"`
-	PatchedRecords int           `json:"patched_records"`
+	RecordCount      int           `json:"record_count"`
+	Duration         time.Duration `json:"duration"`
+	OutputPath       string        `json:"output_path"`
+	LLMCallCount     int           `json:"llm_call_count"`
+	ValidationErrors int           `json:"validation_errors"`
+	PatchedRecords   int           `json:"patched_records"`
 }
 
 // New creates a new generator instance
@@ -87,7 +87,7 @@ func New(cfg *config.Config) (*Generator, error) {
 // Generate generates synthetic data according to the configuration
 func (g *Generator) Generate(ctx context.Context) (*GenerationResult, error) {
 	startTime := time.Now()
-	
+
 	log.Info().
 		Int("count", g.config.Generation.Count).
 		Int64("seed", g.config.Generation.Seed).
@@ -117,7 +117,7 @@ func (g *Generator) Generate(ctx context.Context) (*GenerationResult, error) {
 	// Create worker pools
 	recordChan := make(chan int, g.config.Generation.Workers)
 	resultChan := make(chan generatedRecord, g.config.Generation.Workers)
-	
+
 	var wg sync.WaitGroup
 
 	// Start generation workers
@@ -219,7 +219,7 @@ func (g *Generator) generateRecord(ctx context.Context, rootNode *schema.SchemaN
 	// Apply LLM enrichment if enabled
 	if g.llmClient != nil && g.config.LLM.Mode != "off" {
 		log.Debug().Str("llm_mode", g.config.LLM.Mode).Msg("Starting LLM enrichment")
-		
+
 		// Direct LLM enhancement for specific fields
 		if g.config.LLM.Mode == "field" {
 			// Enhance name field if it exists and has x-llm marker
@@ -234,7 +234,7 @@ func (g *Generator) generateRecord(ctx context.Context, rootNode *schema.SchemaN
 					}
 				}
 			}
-			
+
 			// Enhance description field if it exists and has x-llm marker
 			if _, hasDesc := record.Data["description"]; hasDesc {
 				prompt := g.createFieldPrompt("description", record.Data)
@@ -262,7 +262,7 @@ func (g *Generator) generateRecord(ctx context.Context, rootNode *schema.SchemaN
 	// Validate record
 	if errors := g.validator.ValidateRecord(record.Data); len(errors) > 0 {
 		record.ValidationErrors = errors
-		
+
 		// Try to patch validation errors
 		patched, err := g.validator.PatchRecord(record.Data, errors)
 		if err == nil {
@@ -289,7 +289,7 @@ func (g *Generator) enrichWithLLM(ctx context.Context, data map[string]interface
 // enrichFields enriches individual fields marked for LLM enhancement
 func (g *Generator) enrichFields(ctx context.Context, data map[string]interface{}, rootNode *schema.SchemaNode, recordIndex int) (map[string]interface{}, error) {
 	llmFields := g.parser.GetLLMFields(rootNode)
-	
+
 	// Force LLM enhancement for name and description fields if they exist
 	if _, hasName := data["name"]; hasName {
 		llmFields = append(llmFields, "name")
@@ -297,40 +297,40 @@ func (g *Generator) enrichFields(ctx context.Context, data map[string]interface{
 	if _, hasDesc := data["description"]; hasDesc {
 		llmFields = append(llmFields, "description")
 	}
-	
+
 	log.Debug().Int("llm_fields_count", len(llmFields)).Strs("llm_fields", llmFields).Msg("Found LLM fields for enhancement")
-	
+
 	for _, fieldPath := range llmFields {
 		log.Debug().Str("field", fieldPath).Msg("Processing LLM field")
 		prompt := g.createFieldPrompt(fieldPath, data)
 		seed := g.detGen.deriveSeed(fieldPath, recordIndex)
-		
+
 		log.Debug().Str("field", fieldPath).Str("prompt", prompt).Msg("Calling LLM")
 		enhanced, err := g.llmClient.Generate(ctx, prompt, seed)
 		if err != nil {
 			log.Warn().Err(err).Str("field", fieldPath).Msg("LLM generation failed")
 			continue // Skip this field on error
 		}
-		
+
 		// Parse and clean the LLM response
 		cleanValue := strings.TrimSpace(enhanced)
-		
+
 		// Remove quotes if present
 		if len(cleanValue) >= 2 && cleanValue[0] == '"' && cleanValue[len(cleanValue)-1] == '"' {
 			cleanValue = cleanValue[1 : len(cleanValue)-1]
 		}
-		
+
 		log.Debug().Str("field", fieldPath).Str("raw_response", enhanced).Str("clean_value", cleanValue).Msg("LLM response received")
-		
+
 		if cleanValue != "" && cleanValue != "null" && len(cleanValue) > 0 {
 			// Set the enhanced value in the data - FORCE replacement
 			originalValue := data[fieldPath]
 			data[fieldPath] = cleanValue // Direct assignment to ensure replacement
-			
+
 			log.Debug().Str("field", fieldPath).Interface("original", originalValue).Str("enhanced", cleanValue).Interface("final", data[fieldPath]).Msg("LLM enhancement applied")
 		}
 	}
-	
+
 	return data, nil
 }
 
@@ -338,12 +338,12 @@ func (g *Generator) enrichFields(ctx context.Context, data map[string]interface{
 func (g *Generator) enrichRecord(ctx context.Context, data map[string]interface{}, rootNode *schema.SchemaNode, recordIndex int) (map[string]interface{}, error) {
 	prompt := g.createRecordPrompt(data, rootNode)
 	seed := g.detGen.deriveSeed("record", recordIndex)
-	
+
 	_, err := g.llmClient.Generate(ctx, prompt, seed)
 	if err != nil {
 		return data, err
 	}
-	
+
 	// Parse LLM response and merge with original data
 	// This is a simplified implementation
 	return data, nil
@@ -355,7 +355,7 @@ func (g *Generator) resultCollector(wg *sync.WaitGroup, resultChan <-chan genera
 
 	for record := range resultChan {
 		*records = append(*records, record.Data)
-		
+
 		if record.LLMEnhanced {
 			result.LLMCallCount++
 		}
@@ -382,7 +382,7 @@ func createLLMClient(cfg *config.Config) (LLMClient, error) {
 		MaxRPS:      cfg.LLM.MaxRPS,
 		Timeout:     cfg.LLM.Timeout,
 	}
-	
+
 	return llm.NewOllamaClient(ollamaConfig)
 }
 
@@ -416,7 +416,7 @@ func setFieldValue(data map[string]interface{}, fieldPath, value string) error {
 		data[fieldPath] = value
 		return nil
 	}
-	
+
 	// For nested paths, would need proper path parsing
 	// For now, just handle simple cases
 	data[fieldPath] = value

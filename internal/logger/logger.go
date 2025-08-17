@@ -34,7 +34,7 @@ func New() zerolog.Logger {
 // WithLevel creates a logger with the specified level
 func WithLevel(level string) zerolog.Logger {
 	logger := New()
-	
+
 	switch strings.ToLower(level) {
 	case "debug":
 		return logger.Level(zerolog.DebugLevel)

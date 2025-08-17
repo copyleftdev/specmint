@@ -46,7 +46,7 @@ func (g *DeterministicGenerator) deriveSeed(path string, recordIndex int) int64 
 		return 0
 	}
 	pathHash := int64(h.Sum64() & 0x7FFFFFFFFFFFFFFF) // Ensure positive
-	
+
 	return g.baseSeed ^ pathHash
 }
 
@@ -111,7 +111,7 @@ func (g *DeterministicGenerator) generateString(node *schema.SchemaNode, rng *ma
 	// Generate based on length constraints
 	minLen := 5
 	maxLen := 20
-	
+
 	if node.MinLength != nil {
 		minLen = *node.MinLength
 	}
@@ -207,7 +207,7 @@ func (g *DeterministicGenerator) generateArray(node *schema.SchemaNode, rng *mat
 		// Create unique seed for each array item
 		itemSeed := g.deriveSeed(fmt.Sprintf("%s[%d]", node.Path, i), 0)
 		itemRng := mathrand.New(mathrand.NewSource(itemSeed))
-		
+
 		value, err := g.generateValue(node.Items, itemRng)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate array item %d: %w", i, err)
@@ -264,11 +264,11 @@ func (g *DeterministicGenerator) generateObject(node *schema.SchemaNode, rng *ma
 func (g *DeterministicGenerator) generateEmail(rng *mathrand.Rand) string {
 	domains := []string{"example.com", "test.org", "sample.net", "demo.co"}
 	names := []string{"user", "test", "demo", "sample", "john", "jane", "admin"}
-	
+
 	name := names[rng.Intn(len(names))]
 	domain := domains[rng.Intn(len(domains))]
 	suffix := rng.Intn(1000)
-	
+
 	return fmt.Sprintf("%s%d@%s", name, suffix, domain)
 }
 
@@ -278,11 +278,11 @@ func (g *DeterministicGenerator) generateUUID(rng *mathrand.Rand) string {
 	if err != nil {
 		return ""
 	}
-	
+
 	// Set version (4) and variant bits
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
-	
+
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
@@ -291,10 +291,10 @@ func (g *DeterministicGenerator) generateDate(rng *mathrand.Rand) string {
 	now := time.Now()
 	start := now.AddDate(-5, 0, 0)
 	days := int(now.Sub(start).Hours() / 24)
-	
+
 	randomDays := rng.Intn(days)
 	date := start.AddDate(0, 0, randomDays)
-	
+
 	return date.Format("2006-01-02")
 }
 
@@ -303,10 +303,10 @@ func (g *DeterministicGenerator) generateDateTime(rng *mathrand.Rand) string {
 	now := time.Now()
 	start := now.AddDate(-1, 0, 0)
 	duration := now.Sub(start)
-	
+
 	randomDuration := time.Duration(rng.Int63n(int64(duration)))
 	dateTime := start.Add(randomDuration)
-	
+
 	return dateTime.Format(time.RFC3339)
 }
 
@@ -314,12 +314,12 @@ func (g *DeterministicGenerator) generateURI(rng *mathrand.Rand) string {
 	schemes := []string{"http", "https"}
 	hosts := []string{"example.com", "test.org", "api.sample.net"}
 	paths := []string{"/api/v1", "/data", "/users", "/items"}
-	
+
 	scheme := schemes[rng.Intn(len(schemes))]
 	host := hosts[rng.Intn(len(hosts))]
 	path := paths[rng.Intn(len(paths))]
 	id := rng.Intn(10000)
-	
+
 	return fmt.Sprintf("%s://%s%s/%d", scheme, host, path, id)
 }
 
@@ -328,24 +328,24 @@ func (g *DeterministicGenerator) generatePhone(rng *mathrand.Rand) string {
 	area := 200 + rng.Intn(800)
 	exchange := 200 + rng.Intn(800)
 	number := rng.Intn(10000)
-	
+
 	return fmt.Sprintf("(%03d) %03d-%04d", area, exchange, number)
 }
 
 func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathrand.Rand) (string, error) {
 	// Simple pattern generation - could be enhanced with proper regex generation
 	// For now, generate a string that might match common patterns
-	
+
 	if strings.Contains(pattern, "[0-9]") {
 		// Numeric pattern
 		return fmt.Sprintf("%d", rng.Intn(1000000)), nil
 	}
-	
+
 	if strings.Contains(pattern, "[a-zA-Z]") {
 		// Alphabetic pattern
 		return g.generateRandomString(8, rng), nil
 	}
-	
+
 	// Default to random string
 	return g.generateRandomString(10, rng), nil
 }
@@ -353,10 +353,10 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 func (g *DeterministicGenerator) generateRandomString(length int, rng *mathrand.Rand) string {
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	result := make([]byte, length)
-	
+
 	for i := range result {
 		result[i] = charset[rng.Intn(len(charset))]
 	}
-	
+
 	return string(result)
 }

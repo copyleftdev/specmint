@@ -34,25 +34,25 @@ type SchemaNode struct {
 	MaxItems    *int                   `json:"maxItems,omitempty"`
 	MultipleOf  *float64               `json:"multipleOf,omitempty"`
 	Description string                 `json:"description,omitempty"`
-	
+
 	// SpecMint extensions
-	LLMEnhanced    bool                   `json:"x-llm,omitempty"`
-	CrossFieldRules []CrossFieldRule      `json:"x-cross-field-rules,omitempty"`
-	
+	LLMEnhanced     bool             `json:"x-llm,omitempty"`
+	CrossFieldRules []CrossFieldRule `json:"x-cross-field-rules,omitempty"`
+
 	// Internal metadata
-	Path           string                 `json:"-"`
-	IsRequired     bool                   `json:"-"`
-	OptionalProb   float64               `json:"-"`
+	Path         string  `json:"-"`
+	IsRequired   bool    `json:"-"`
+	OptionalProb float64 `json:"-"`
 }
 
 // CrossFieldRule represents a cross-field validation rule
 type CrossFieldRule struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description"`
-	Fields      []string    `json:"fields"`
-	Rule        string      `json:"rule"`
-	Severity    string      `json:"severity"` // error, warning
-	Patch       *PatchRule  `json:"patch,omitempty"`
+	Name        string     `json:"name"`
+	Description string     `json:"description"`
+	Fields      []string   `json:"fields"`
+	Rule        string     `json:"rule"`
+	Severity    string     `json:"severity"` // error, warning
+	Patch       *PatchRule `json:"patch,omitempty"`
 }
 
 // PatchRule defines how to fix a constraint violation
@@ -66,7 +66,7 @@ type PatchRule struct {
 // New creates a new schema parser
 func NewParser() *Parser {
 	compiler := jsonschema.NewCompiler()
-	
+
 	return &Parser{
 		compiler: compiler,
 	}
@@ -182,7 +182,7 @@ func (p *Parser) buildNode(raw map[string]interface{}, path string, required boo
 	if llmFlag, ok := raw["x-llm"].(bool); ok {
 		node.LLMEnhanced = llmFlag
 	}
-	
+
 	// Also check for "llm:" prefix in description
 	if desc, ok := raw["description"].(string); ok && strings.HasPrefix(desc, "llm:") {
 		node.LLMEnhanced = true
@@ -221,7 +221,7 @@ func (p *Parser) buildNode(raw map[string]interface{}, path string, required boo
 	if node.Type == "object" {
 		if props, ok := raw["properties"].(map[string]interface{}); ok {
 			node.Properties = make(map[string]*SchemaNode)
-			
+
 			// Get required fields
 			requiredFields := make(map[string]bool)
 			if reqArray, ok := raw["required"].([]interface{}); ok {
@@ -285,7 +285,7 @@ func (p *Parser) collectLLMFields(node *SchemaNode, prefix string, fields *[]str
 		}
 		return
 	}
-	
+
 	if node.LLMEnhanced && prefix != "" {
 		*fields = append(*fields, prefix)
 	}

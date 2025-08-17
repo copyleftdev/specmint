@@ -21,15 +21,15 @@ import (
 
 func newGenerateCmd() *cobra.Command {
 	var (
-		schemaFile   string
-		outputDir    string
-		count        int
-		seed         int64
-		llmMode      string
-		workers      int
-		llmWorkers   int
-		maxRPS       int
-		timeout      string
+		schemaFile string
+		outputDir  string
+		count      int
+		seed       int64
+		llmMode    string
+		workers    int
+		llmWorkers int
+		maxRPS     int
+		timeout    string
 	)
 
 	cmd := &cobra.Command{
@@ -42,7 +42,7 @@ Examples:
   specmint generate --schema schema.json --count 100 --llm-mode fields --workers 4`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cfg := config.FromContext(cmd.Context())
-			
+
 			// Override config with CLI flags
 			if schemaFile != "" {
 				cfg.Schema = schemaFile
@@ -84,7 +84,7 @@ Examples:
 			fmt.Printf("✅ Generated %d records in %v\n", result.RecordCount, result.Duration)
 			fmt.Printf("📁 Output: %s\n", result.OutputPath)
 			fmt.Printf("📊 Manifest: %s\n", filepath.Join(result.OutputPath, "manifest.json"))
-			
+
 			return nil
 		},
 	}
@@ -231,33 +231,33 @@ Examples:
 func runValidate(datasetFile, schemaFile, rulesFile string, verbose bool) error {
 	fmt.Printf("🔍 Validating dataset: %s\n", datasetFile)
 	fmt.Printf("📋 Against schema: %s\n", schemaFile)
-	
+
 	// Parse schema
 	parser := schema.NewParser()
 	err := parser.ParseFile(schemaFile)
 	if err != nil {
 		return fmt.Errorf("failed to parse schema: %w", err)
 	}
-	
+
 	// Create validator
 	v := validator.New(parser)
 	domainValidator := validator.NewDomainValidator()
-	
+
 	// Read and validate dataset
 	file, err := os.Open(datasetFile)
 	if err != nil {
 		return fmt.Errorf("failed to open dataset: %w", err)
 	}
 	defer file.Close()
-	
+
 	scanner := bufio.NewScanner(file)
 	recordCount := 0
 	errorCount := 0
-	
+
 	for scanner.Scan() {
 		recordCount++
 		var record map[string]interface{}
-		
+
 		if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
 			errorCount++
 			if verbose {
@@ -265,7 +265,7 @@ func runValidate(datasetFile, schemaFile, rulesFile string, verbose bool) error 
 			}
 			continue
 		}
-		
+
 		// Schema validation
 		errors := v.ValidateRecord(record)
 		if len(errors) > 0 {
@@ -276,7 +276,7 @@ func runValidate(datasetFile, schemaFile, rulesFile string, verbose bool) error 
 				}
 			}
 		}
-		
+
 		// Domain validation
 		domain := detectDomain(schemaFile)
 		if domain != "" {
@@ -291,55 +291,55 @@ func runValidate(datasetFile, schemaFile, rulesFile string, verbose bool) error 
 			}
 		}
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading dataset: %w", err)
 	}
-	
+
 	fmt.Printf("📊 Validation Results:\n")
 	fmt.Printf("   Records processed: %d\n", recordCount)
 	fmt.Printf("   Validation errors: %d\n", errorCount)
-	
+
 	if errorCount == 0 {
 		fmt.Println("✅ All records passed validation")
 	} else {
 		fmt.Printf("⚠️  %d validation issues found\n", errorCount)
 	}
-	
+
 	return nil
 }
 
 func runInspect(datasetFile, outputFormat string, detailed bool) error {
 	fmt.Printf("🔍 Inspecting dataset: %s\n", datasetFile)
-	
+
 	file, err := os.Open(datasetFile)
 	if err != nil {
 		return fmt.Errorf("failed to open dataset: %w", err)
 	}
 	defer file.Close()
-	
+
 	scanner := bufio.NewScanner(file)
 	recordCount := 0
 	fieldStats := make(map[string]int)
-	
+
 	for scanner.Scan() {
 		recordCount++
 		var record map[string]interface{}
-		
+
 		if err := json.Unmarshal(scanner.Bytes(), &record); err != nil {
 			continue
 		}
-		
+
 		// Count fields
 		for field := range record {
 			fieldStats[field]++
 		}
 	}
-	
+
 	if err := scanner.Err(); err != nil {
 		return fmt.Errorf("error reading dataset: %w", err)
 	}
-	
+
 	// Output results
 	switch outputFormat {
 	case "json":
@@ -353,7 +353,7 @@ func runInspect(datasetFile, outputFormat string, detailed bool) error {
 		fmt.Printf("📊 Dataset Analysis:\n")
 		fmt.Printf("   Total records: %d\n", recordCount)
 		fmt.Printf("   Fields found: %d\n", len(fieldStats))
-		
+
 		if detailed {
 			fmt.Println("\n📋 Field Coverage:")
 			for field, count := range fieldStats {
@@ -362,16 +362,16 @@ func runInspect(datasetFile, outputFormat string, detailed bool) error {
 			}
 		}
 	}
-	
+
 	fmt.Println("✅ Inspection completed")
 	return nil
 }
 
 func runDoctor(ollamaOnly bool) error {
 	fmt.Println("🏥 Running system diagnostics...")
-	
+
 	allGood := true
-	
+
 	// Check Ollama connection
 	fmt.Print("🤖 Checking Ollama connection... ")
 	client := &http.Client{Timeout: 5 * time.Second}
@@ -384,7 +384,7 @@ func runDoctor(ollamaOnly bool) error {
 		_ = resp.Body.Close()
 		fmt.Println("✅ Connected")
 	}
-	
+
 	if !ollamaOnly {
 		// Check schema directory
 		fmt.Print("📋 Checking schema directory... ")
@@ -394,7 +394,7 @@ func runDoctor(ollamaOnly bool) error {
 		} else {
 			fmt.Println("✅ Found")
 		}
-		
+
 		// Check output directory
 		fmt.Print("📁 Checking output directory... ")
 		if err := os.MkdirAll("output", 0750); err != nil {
@@ -403,62 +403,62 @@ func runDoctor(ollamaOnly bool) error {
 		} else {
 			fmt.Println("✅ Ready")
 		}
-		
+
 		// Check Go version
 		fmt.Print("🔧 Checking Go environment... ")
 		fmt.Println("✅ Go 1.21+")
 	}
-	
+
 	if allGood {
 		fmt.Println("\n✅ All systems operational")
 	} else {
 		fmt.Println("\n⚠️  Some issues detected")
 	}
-	
+
 	return nil
 }
 
 func runBenchmark(schemaFile, counts, seeds string) error {
 	fmt.Printf("🏃 Running benchmarks with schema: %s\n", schemaFile)
-	
+
 	countList := strings.Split(counts, ",")
 	seedList := strings.Split(seeds, ",")
-	
+
 	fmt.Printf("📊 Testing %d count variations with %d seeds\n", len(countList), len(seedList))
-	
+
 	for _, countStr := range countList {
 		count, err := strconv.Atoi(strings.TrimSpace(countStr))
 		if err != nil {
 			continue
 		}
-		
+
 		var totalDuration time.Duration
 		validRuns := 0
-		
+
 		for _, seedStr := range seedList {
 			_, err := strconv.ParseInt(strings.TrimSpace(seedStr), 10, 64)
 			if err != nil {
 				continue
 			}
-			
+
 			start := time.Now()
-			
+
 			// Simulate generation (would call actual generator here)
 			time.Sleep(time.Duration(count) * time.Microsecond)
-			
+
 			duration := time.Since(start)
 			totalDuration += duration
 			validRuns++
 		}
-		
+
 		if validRuns > 0 {
 			avgDuration := totalDuration / time.Duration(validRuns)
 			recordsPerSec := float64(count) / avgDuration.Seconds()
-			fmt.Printf("   Count %d: avg %.2fms (%.0f records/sec)\n", 
+			fmt.Printf("   Count %d: avg %.2fms (%.0f records/sec)\n",
 				count, avgDuration.Seconds()*1000, recordsPerSec)
 		}
 	}
-	
+
 	fmt.Println("✅ Benchmarks completed")
 	return nil
 }

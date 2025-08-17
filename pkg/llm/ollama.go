@@ -29,15 +29,15 @@ type OllamaClient struct {
 
 // OllamaConfig holds Ollama-specific configuration
 type OllamaConfig struct {
-	Host         string
-	Model        string
-	AutoPull     bool
-	KeepAlive    time.Duration
-	MaxRetries   int
-	Temperature  float32
-	MaxRPS       int
-	Timeout      time.Duration
-	MaxConns     int
+	Host        string
+	Model       string
+	AutoPull    bool
+	KeepAlive   time.Duration
+	MaxRetries  int
+	Temperature float32
+	MaxRPS      int
+	Timeout     time.Duration
+	MaxConns    int
 }
 
 // OllamaRequest represents a request to Ollama API
@@ -69,8 +69,8 @@ type ModelsResponse struct {
 
 // connectionPool manages HTTP connections to Ollama
 type connectionPool struct {
-	client   *http.Client
-	maxConns int
+	client    *http.Client
+	maxConns  int
 	semaphore chan struct{}
 }
 

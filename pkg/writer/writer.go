@@ -43,7 +43,7 @@ func (w *Writer) WriteRecords(records []map[string]interface{}) error {
 // WriteManifest writes the generation manifest
 func (w *Writer) WriteManifest(manifest map[string]interface{}) error {
 	manifestPath := filepath.Join(w.outputDir, "manifest.json")
-	
+
 	file, err := os.Create(manifestPath)
 	if err != nil {
 		return fmt.Errorf("failed to create manifest file: %w", err)
@@ -52,7 +52,7 @@ func (w *Writer) WriteManifest(manifest map[string]interface{}) error {
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	
+
 	if err := encoder.Encode(manifest); err != nil {
 		return fmt.Errorf("failed to write manifest: %w", err)
 	}
@@ -63,7 +63,7 @@ func (w *Writer) WriteManifest(manifest map[string]interface{}) error {
 // writeJSON writes records as a single JSON array
 func (w *Writer) writeJSON(records []map[string]interface{}) error {
 	outputPath := filepath.Join(w.outputDir, "dataset.json")
-	
+
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
@@ -72,7 +72,7 @@ func (w *Writer) writeJSON(records []map[string]interface{}) error {
 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
-	
+
 	if err := encoder.Encode(records); err != nil {
 		return fmt.Errorf("failed to write JSON: %w", err)
 	}
@@ -83,7 +83,7 @@ func (w *Writer) writeJSON(records []map[string]interface{}) error {
 // writeJSONL writes records as JSON Lines (one JSON object per line)
 func (w *Writer) writeJSONL(records []map[string]interface{}) error {
 	outputPath := filepath.Join(w.outputDir, "dataset.jsonl")
-	
+
 	file, err := os.Create(outputPath)
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
@@ -91,7 +91,7 @@ func (w *Writer) writeJSONL(records []map[string]interface{}) error {
 	defer file.Close()
 
 	encoder := json.NewEncoder(file)
-	
+
 	for _, record := range records {
 		if err := encoder.Encode(record); err != nil {
 			return fmt.Errorf("failed to write record: %w", err)

@@ -25,31 +25,31 @@ type Config struct {
 }
 
 type Generation struct {
-	Count   int   `yaml:"count" json:"count"`
-	Seed    int64 `yaml:"seed" json:"seed"`
-	Workers int   `yaml:"workers" json:"workers"`
+	Count   int           `yaml:"count" json:"count"`
+	Seed    int64         `yaml:"seed" json:"seed"`
+	Workers int           `yaml:"workers" json:"workers"`
 	Timeout time.Duration `yaml:"timeout" json:"timeout"`
 }
 
 type LLM struct {
-	Mode       string            `yaml:"mode" json:"mode"` // off, fields, record
-	Provider   string            `yaml:"provider" json:"provider"` // auto, ollama, openai, anthropic
-	Workers    int               `yaml:"workers" json:"workers"`
-	MaxRPS     int               `yaml:"max_rps" json:"max_rps"`
-	Timeout    time.Duration     `yaml:"timeout" json:"timeout"`
-	Ollama     OllamaConfig      `yaml:"ollama" json:"ollama"`
-	OpenAI     OpenAIConfig      `yaml:"openai" json:"openai"`
-	Anthropic  AnthropicConfig   `yaml:"anthropic" json:"anthropic"`
-	Budget     BudgetConfig      `yaml:"budget" json:"budget"`
+	Mode      string          `yaml:"mode" json:"mode"`         // off, fields, record
+	Provider  string          `yaml:"provider" json:"provider"` // auto, ollama, openai, anthropic
+	Workers   int             `yaml:"workers" json:"workers"`
+	MaxRPS    int             `yaml:"max_rps" json:"max_rps"`
+	Timeout   time.Duration   `yaml:"timeout" json:"timeout"`
+	Ollama    OllamaConfig    `yaml:"ollama" json:"ollama"`
+	OpenAI    OpenAIConfig    `yaml:"openai" json:"openai"`
+	Anthropic AnthropicConfig `yaml:"anthropic" json:"anthropic"`
+	Budget    BudgetConfig    `yaml:"budget" json:"budget"`
 }
 
 type OllamaConfig struct {
-	Host         string        `yaml:"host" json:"host"`
-	Model        string        `yaml:"model" json:"model"`
-	AutoPull     bool          `yaml:"auto_pull" json:"auto_pull"`
-	KeepAlive    time.Duration `yaml:"keep_alive" json:"keep_alive"`
-	MaxRetries   int           `yaml:"max_retries" json:"max_retries"`
-	Temperature  float32       `yaml:"temperature" json:"temperature"`
+	Host        string        `yaml:"host" json:"host"`
+	Model       string        `yaml:"model" json:"model"`
+	AutoPull    bool          `yaml:"auto_pull" json:"auto_pull"`
+	KeepAlive   time.Duration `yaml:"keep_alive" json:"keep_alive"`
+	MaxRetries  int           `yaml:"max_retries" json:"max_retries"`
+	Temperature float32       `yaml:"temperature" json:"temperature"`
 }
 
 type OpenAIConfig struct {
@@ -67,9 +67,9 @@ type AnthropicConfig struct {
 }
 
 type BudgetConfig struct {
-	MaxCostUSD     float64 `yaml:"max_cost_usd" json:"max_cost_usd"`
-	WarnThreshold  float64 `yaml:"warn_threshold" json:"warn_threshold"`
-	TrackingEnabled bool   `yaml:"tracking_enabled" json:"tracking_enabled"`
+	MaxCostUSD      float64 `yaml:"max_cost_usd" json:"max_cost_usd"`
+	WarnThreshold   float64 `yaml:"warn_threshold" json:"warn_threshold"`
+	TrackingEnabled bool    `yaml:"tracking_enabled" json:"tracking_enabled"`
 }
 
 type Output struct {

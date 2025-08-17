@@ -17,9 +17,9 @@ type Validator struct {
 
 // ValidationError represents a validation failure
 type ValidationError struct {
-	Field   string `json:"field"`
-	Rule    string `json:"rule"`
-	Message string `json:"message"`
+	Field   string      `json:"field"`
+	Rule    string      `json:"rule"`
+	Message string      `json:"message"`
 	Value   interface{} `json:"value"`
 }
 
@@ -27,7 +27,7 @@ type ValidationError struct {
 func New(parser *schema.Parser) *Validator {
 	rootNode, _ := parser.GetRootNode()
 	rules := parser.GetCrossFieldRules(rootNode)
-	
+
 	return &Validator{
 		parser: parser,
 		rules:  rules,
@@ -111,7 +111,7 @@ func (v *Validator) validateDateOrdering(data map[string]interface{}, fields []s
 	// Check ordering (simplified - assumes ISO date format)
 	for i := 1; i < len(dates); i++ {
 		if dates[i-1] > dates[i] {
-			return fmt.Errorf("date ordering violation: %s (%s) should be <= %s (%s)", 
+			return fmt.Errorf("date ordering violation: %s (%s) should be <= %s (%s)",
 				fields[i-1], dates[i-1], fields[i], dates[i])
 		}
 	}
@@ -190,7 +190,7 @@ func (v *Validator) validateSumConstraint(data map[string]interface{}, fields []
 	tolerance := 0.01 // Allow small floating point differences
 
 	if abs(sum-target) > tolerance {
-		return fmt.Errorf("sum constraint violation: sum of %s = %f, expected %f", 
+		return fmt.Errorf("sum constraint violation: sum of %s = %f, expected %f",
 			strings.Join(sumFields, "+"), sum, target)
 	}
 
@@ -214,7 +214,7 @@ func (v *Validator) applyPatch(data map[string]interface{}, patch *schema.PatchR
 
 func (v *Validator) adjustField(data map[string]interface{}, patch *schema.PatchRule) error {
 	currentVal := v.getNumericValue(data, patch.Target)
-	
+
 	if adjustment, ok := patch.Params["adjustment"].(float64); ok {
 		data[patch.Target] = currentVal + adjustment
 	} else if factor, ok := patch.Params["factor"].(float64); ok {
@@ -222,7 +222,7 @@ func (v *Validator) adjustField(data map[string]interface{}, patch *schema.Patch
 	} else {
 		return fmt.Errorf("adjust_field requires 'adjustment' or 'factor' parameter")
 	}
-	
+
 	return nil
 }
 
@@ -250,7 +250,7 @@ func (v *Validator) isTruthy(val interface{}) bool {
 	if val == nil {
 		return false
 	}
-	
+
 	switch v := val.(type) {
 	case bool:
 		return v
