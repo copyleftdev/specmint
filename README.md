@@ -1,8 +1,14 @@
 # SpecMint: Synthetic Dataset Generator
 
+[![CI/CD Pipeline](https://github.com/copyleftdev/specmint/actions/workflows/ci.yml/badge.svg)](https://github.com/copyleftdev/specmint/actions/workflows/ci.yml)
+[![Security Audit](https://github.com/copyleftdev/specmint/actions/workflows/security.yml/badge.svg)](https://github.com/copyleftdev/specmint/actions/workflows/security.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/copyleftdev/specmint)](https://goreportcard.com/report/github.com/copyleftdev/specmint)
+[![codecov](https://codecov.io/gh/copyleftdev/specmint/branch/main/graph/badge.svg)](https://codecov.io/gh/copyleftdev/specmint)
 [![Go Version](https://img.shields.io/badge/Go-1.25.0-blue.svg)](https://golang.org/)
-[![Security](https://img.shields.io/badge/Security-A%20Rating-green.svg)](./docs/SECURITY_AUDIT_REPORT.md)
 [![License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](LICENSE)
+[![GitHub release](https://img.shields.io/github/release/copyleftdev/specmint.svg)](https://github.com/copyleftdev/specmint/releases)
+[![GitHub stars](https://img.shields.io/github/stars/copyleftdev/specmint.svg)](https://github.com/copyleftdev/specmint/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/copyleftdev/specmint.svg)](https://github.com/copyleftdev/specmint/issues)
 
 **SpecMint** is a production-ready synthetic dataset generator that creates realistic, schema-compliant datasets with optional LLM enrichment. Built for privacy-conscious data generation, testing, and development workflows.
 
@@ -118,8 +124,9 @@ SpecMint employs multiple testing methodologies for comprehensive quality assura
 - **Memory Usage**: Resource consumption monitoring
 - **Deterministic Verification**: Seed-based reproducibility testing
 
-## 🔧 Build System
+## 🔧 Build System & CI/CD
 
+### Local Development
 Comprehensive Makefile with 15+ targets for complete development lifecycle:
 
 ```bash
@@ -139,6 +146,15 @@ make deps-update deps-verify
 make doctor
 ```
 
+### Automated CI/CD Pipeline
+Production-grade GitHub Actions workflows with expert separation of concerns:
+
+- **CI/CD Pipeline**: Multi-platform builds, test matrix, golden dataset validation
+- **Security Audit**: Daily automated security scanning with SARIF integration
+- **Release Automation**: Multi-platform binary builds with automated GitHub releases
+- **Coverage Reporting**: Automated code coverage via Codecov integration
+- **Quality Gates**: Go Report Card integration for code quality metrics
+
 ## 🛡️ Security
 
 SpecMint maintains an **A-grade security rating** with:
@@ -148,6 +164,8 @@ SpecMint maintains an **A-grade security rating** with:
 - ✅ **Hardened file permissions** (0600 for logs, 0750 for directories)
 - ✅ **Clean dependency tree** with regular vulnerability monitoring
 - ✅ **Static code analysis** with 54% security issue reduction
+- ✅ **Daily security audits** via GitHub Actions
+- ✅ **SARIF integration** for GitHub Security tab
 
 See [SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md) for detailed security assessment.
 
