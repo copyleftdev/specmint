@@ -5,14 +5,16 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/specmint/specmint/pkg/schema"
 )
 
 // Validator handles record validation and patching
 type Validator struct {
-	parser *schema.Parser
-	rules  []schema.CrossFieldRule
+	parser   *schema.Parser
+	rules    []schema.CrossFieldRule
+	hl7Rules *HL7ValidationRules
 }
 
 // ValidationError represents a validation failure
@@ -29,8 +31,9 @@ func New(parser *schema.Parser) *Validator {
 	rules := parser.GetCrossFieldRules(rootNode)
 
 	return &Validator{
-		parser: parser,
-		rules:  rules,
+		parser:   parser,
+		rules:    rules,
+		hl7Rules: NewHL7ValidationRules(),
 	}
 }
 
@@ -47,6 +50,14 @@ func (v *Validator) ValidateRecord(data map[string]interface{}) []string {
 	for _, rule := range v.rules {
 		if err := v.validateCrossFieldRule(data, rule); err != nil {
 			errors = append(errors, fmt.Sprintf("Cross-field rule '%s' failed: %s", rule.Name, err.Error()))
+		}
+	}
+
+	// HL7-specific validation if schema contains HL7 fields
+	if v.isHL7Schema(data) {
+		hl7Errors := v.hl7Rules.ValidateCrossFieldRules(data)
+		for _, err := range hl7Errors {
+			errors = append(errors, fmt.Sprintf("HL7 validation failed: %s", err.Error()))
 		}
 	}
 
@@ -85,6 +96,14 @@ func (v *Validator) validateCrossFieldRule(data map[string]interface{}, rule sch
 		return v.validateMutualExclusion(data, rule.Fields)
 	case "sum_constraint":
 		return v.validateSumConstraint(data, rule.Fields)
+	case "birthDate <= today":
+		return v.validateBirthDateNotFuture(data)
+	case "if deceased.boolean == true then deceasedDateTime must be present":
+		return v.validateDeceasedLogic(data)
+	case "hl7_date_time_format":
+		return v.validateHL7DateTimeFormat(data, rule.Fields)
+	case "medical_code_format":
+		return v.validateMedicalCodeFormat(data, rule.Fields)
 	default:
 		return fmt.Errorf("unknown rule type: %s", rule.Rule)
 	}
@@ -266,6 +285,117 @@ func (v *Validator) isTruthy(val interface{}) bool {
 func (v *Validator) ruleViolated(errors []string, ruleName string) bool {
 	for _, err := range errors {
 		if strings.Contains(err, fmt.Sprintf("rule '%s'", ruleName)) {
+			return true
+		}
+	}
+	return false
+}
+
+// validateBirthDateNotFuture validates that birth date is not in the future
+func (v *Validator) validateBirthDateNotFuture(data map[string]interface{}) error {
+	birthDateVal, exists := data["birthDate"]
+	if !exists {
+		return nil // Optional field
+	}
+	
+	birthDateStr, ok := birthDateVal.(string)
+	if !ok {
+		return fmt.Errorf("birthDate must be a string")
+	}
+	
+	// Parse birth date (FHIR date format: YYYY-MM-DD)
+	birthDate, err := time.Parse("2006-01-02", birthDateStr)
+	if err != nil {
+		return fmt.Errorf("invalid birthDate format: %s", birthDateStr)
+	}
+	
+	if birthDate.After(time.Now()) {
+		return fmt.Errorf("birthDate cannot be in the future: %s", birthDateStr)
+	}
+	
+	return nil
+}
+
+// validateDeceasedLogic validates deceased field logic
+func (v *Validator) validateDeceasedLogic(data map[string]interface{}) error {
+	deceasedVal, exists := data["deceased"]
+	if !exists {
+		return nil // Optional field
+	}
+	
+	// Handle both boolean and string deceased fields
+	switch deceased := deceasedVal.(type) {
+	case bool:
+		if deceased {
+			// If deceased is true, deceasedDateTime should be present
+			if _, hasDateTime := data["deceasedDateTime"]; !hasDateTime {
+				return fmt.Errorf("when deceased is true, deceasedDateTime should be provided")
+			}
+		}
+	case string:
+		// String value indicates deceased with date/time info
+		if deceased != "" {
+			// Validate as HL7 date/time if provided
+			if err := v.hl7Rules.ValidateHL7DateTime(deceased); err != nil {
+				return fmt.Errorf("invalid deceased date/time: %v", err)
+			}
+		}
+	}
+	
+	return nil
+}
+
+// validateHL7DateTimeFormat validates HL7 date/time fields
+func (v *Validator) validateHL7DateTimeFormat(data map[string]interface{}, fields []string) error {
+	for _, field := range fields {
+		if val, exists := data[field]; exists {
+			if dateStr, ok := val.(string); ok && dateStr != "" {
+				if err := v.hl7Rules.ValidateHL7DateTime(dateStr); err != nil {
+					return fmt.Errorf("invalid HL7 date/time in field %s: %v", field, err)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// validateMedicalCodeFormat validates medical coding fields
+func (v *Validator) validateMedicalCodeFormat(data map[string]interface{}, fields []string) error {
+	for _, field := range fields {
+		if val, exists := data[field]; exists {
+			if codeStr, ok := val.(string); ok && codeStr != "" {
+				// Determine code type and validate accordingly
+				switch {
+				case strings.Contains(field, "icd") || strings.Contains(field, "diagnosis"):
+					if err := v.hl7Rules.ValidateICD10Code(codeStr); err != nil {
+						return fmt.Errorf("invalid ICD-10 code in field %s: %v", field, err)
+					}
+				case strings.Contains(field, "cpt") || strings.Contains(field, "procedure"):
+					if err := v.hl7Rules.ValidateCPTCode(codeStr); err != nil {
+						return fmt.Errorf("invalid CPT code in field %s: %v", field, err)
+					}
+				case strings.Contains(field, "npi"):
+					if err := v.hl7Rules.ValidateNPI(codeStr); err != nil {
+						return fmt.Errorf("invalid NPI in field %s: %v", field, err)
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+// isHL7Schema detects if the data contains HL7-specific fields
+func (v *Validator) isHL7Schema(data map[string]interface{}) bool {
+	hl7Fields := []string{
+		"patient_id", "medical_record_number", "npi", "icd10_code", "cpt_code",
+		"message_type", "trigger_event", "birth_date", "admission_date",
+		"observation_status", "result_status", "patient_class", "birthDate",
+		"deceased", "identifier", "resourceType", "gender", "maritalStatus",
+	}
+	
+	for _, field := range hl7Fields {
+		if _, exists := data[field]; exists {
 			return true
 		}
 	}

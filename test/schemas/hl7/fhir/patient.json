@@ -155,7 +155,9 @@
       "oneOf": [
         {"type": "boolean"},
         {"type": "string", "format": "date-time"}
-      ]
+      ],
+      "x-llm": true,
+      "description": "llm: Generate either the boolean value false (not string) or a realistic death date-time in ISO format like 2024-01-15T10:30:00Z. Use false for living patients, date-time for deceased patients."
     },
     "address": {
       "type": "array",

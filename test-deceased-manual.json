@@ -1,0 +1,10 @@
+{
+  "resourceType": "Patient",
+  "id": "test-deceased-true",
+  "identifier": [{"system": "http://test.com", "value": "123"}],
+  "name": [{"family": "TestPatient", "given": ["John"]}],
+  "gender": "male",
+  "birthDate": "1950-01-01",
+  "deceased": true,
+  "deceasedDateTime": "2024-01-15T10:30:00Z"
+}

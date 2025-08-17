@@ -277,9 +277,9 @@ func runValidate(datasetFile, schemaFile, rulesFile string, verbose bool) error 
 			}
 		}
 
-		// Domain validation
+		// Skip legacy domain validation for HL7 schemas - use integrated HL7 validation instead
 		domain := detectDomain(schemaFile)
-		if domain != "" {
+		if domain != "" && domain != "healthcare" {
 			domainErrors := domainValidator.ValidateDomain(domain, record)
 			if len(domainErrors) > 0 {
 				errorCount += len(domainErrors)
@@ -465,7 +465,9 @@ func runBenchmark(schemaFile, counts, seeds string) error {
 
 func detectDomain(schemaFile string) string {
 	schemaFile = strings.ToLower(schemaFile)
-	if strings.Contains(schemaFile, "healthcare") || strings.Contains(schemaFile, "patient") {
+	if strings.Contains(schemaFile, "healthcare") || strings.Contains(schemaFile, "patient") || 
+	   strings.Contains(schemaFile, "hl7") || strings.Contains(schemaFile, "fhir") ||
+	   strings.Contains(schemaFile, "cda") || strings.Contains(schemaFile, "medical") {
 		return "healthcare"
 	}
 	if strings.Contains(schemaFile, "fintech") || strings.Contains(schemaFile, "transaction") {
