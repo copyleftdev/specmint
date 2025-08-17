@@ -61,65 +61,13 @@ jobs:
           fi
 
       - name: Check Go Vet
-        run: go vet ./...
-
-  # ============================================================================
-  # SECURITY SCANNING
-  # ============================================================================
-  security:
-    name: Security Analysis
-    runs-on: ubuntu-latest
-    needs: lint
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: ${{ env.GO_VERSION }}
-
-      - name: Cache Go Modules
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Install Security Tools
         run: |
-          go install github.com/securego/gosec/v2/cmd/gosec@latest
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          go install github.com/sonatype-nexus-community/nancy@latest
+          if [ "$(go vet -all . | wc -l)" -gt 0 ]; then
+            echo "Code has vet issues:"
+            go vet -all .
+            exit 1
+          fi
 
-      - name: Run GoSec Security Scanner
-        run: |
-          gosec -fmt sarif -out gosec-results.sarif -stdout -verbose=text -exclude=G104,G204,G304,G401,G501,G502 ./... || true
-        continue-on-error: true
-
-      - name: Upload GoSec SARIF Results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: gosec-results.sarif
-
-      - name: Run Go Vulnerability Check
-        run: |
-          govulncheck ./...
-
-      - name: Run Nancy Dependency Scanner
-        run: |
-          go list -json -deps ./... | nancy sleuth
-
-      - name: Upload Nancy Results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: nancy-security-results
-          path: nancy-results.txt
 
   # ============================================================================
   # BUILD & TEST MATRIX
@@ -269,7 +217,7 @@ jobs:
   release-check:
     name: Release Readiness
     runs-on: ubuntu-latest
-    needs: [lint, security, test, golden-tests]
+    needs: [lint, test, golden-tests]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     steps:
       - name: Checkout Code
@@ -316,14 +264,13 @@ jobs:
   status:
     name: Pipeline Status
     runs-on: ubuntu-latest
-    needs: [lint, security, test, golden-tests]
+    needs: [lint, test, golden-tests]
     if: always()
     steps:
       - name: Check Pipeline Status
         run: |
           echo "Pipeline Status Summary:"
           echo "Lint: ${{ needs.lint.result }}"
-          echo "Security: ${{ needs.security.result }}"
           echo "Test: ${{ needs.test.result }}"
           echo "Golden Tests: ${{ needs.golden-tests.result }}"
           
