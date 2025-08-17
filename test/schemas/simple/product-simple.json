@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^PRD-[0-9]{6}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 50,
+      "x-llm": true
+    },
+    "category": {
+      "type": "string",
+      "enum": ["electronics", "clothing", "books", "home", "sports"]
+    },
+    "price": {
+      "type": "number",
+      "minimum": 9.99,
+      "maximum": 999.99
+    }
+  },
+  "required": ["id", "name", "category", "price"]
+}

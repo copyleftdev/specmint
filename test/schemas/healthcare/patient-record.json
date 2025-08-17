@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Healthcare Patient Record",
+  "type": "object",
+  "properties": {
+    "patient_id": {
+      "type": "string",
+      "pattern": "^PT-[0-9]{6}$"
+    },
+    "mrn": {
+      "type": "string",
+      "pattern": "^MRN[0-9]{6}$"
+    },
+    "first_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 30,
+      "x-llm": true,
+      "description": "llm: Generate realistic first name"
+    },
+    "last_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 30,
+      "x-llm": true,
+      "description": "llm: Generate realistic last name"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["male", "female", "other"]
+    },
+    "provider_npi": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$"
+    },
+    "provider_name": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 50,
+      "x-llm": true,
+      "description": "llm: Generate realistic physician name with Dr. title"
+    },
+    "specialty": {
+      "type": "string",
+      "enum": ["family_medicine", "internal_medicine", "cardiology", "endocrinology", "hematology"]
+    },
+    "visit_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "chief_complaint": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 150,
+      "x-llm": true,
+      "description": "llm: Generate realistic chief complaint based on specialty"
+    },
+    "systolic_bp": {
+      "type": "integer",
+      "minimum": 90,
+      "maximum": 180
+    },
+    "diastolic_bp": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 120
+    },
+    "heart_rate": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 100
+    },
+    "temperature": {
+      "type": "number",
+      "minimum": 97.0,
+      "maximum": 102.0
+    },
+    "white_blood_cells": {
+      "type": "number",
+      "minimum": 4.0,
+      "maximum": 11.0
+    },
+    "red_blood_cells": {
+      "type": "number",
+      "minimum": 4.2,
+      "maximum": 5.4
+    },
+    "hemoglobin": {
+      "type": "number",
+      "minimum": 12.0,
+      "maximum": 16.0
+    },
+    "glucose": {
+      "type": "integer",
+      "minimum": 70,
+      "maximum": 200
+    },
+    "cholesterol": {
+      "type": "integer",
+      "minimum": 150,
+      "maximum": 300
+    },
+    "diagnosis_code": {
+      "type": "string",
+      "pattern": "^[A-Z][0-9]{2}\\.[0-9]{1,2}$"
+    },
+    "diagnosis_description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 100,
+      "x-llm": true,
+      "description": "llm: Generate medical diagnosis description based on specialty"
+    },
+    "procedure_code": {
+      "type": "string",
+      "pattern": "^[0-9]{5}$"
+    },
+    "charge_amount": {
+      "type": "number",
+      "minimum": 50.00,
+      "maximum": 5000.00
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "patient_id", "mrn", "first_name", "last_name", "date_of_birth", "gender",
+    "provider_npi", "provider_name", "specialty", "visit_date", "chief_complaint",
+    "systolic_bp", "diastolic_bp", "heart_rate", "temperature",
+    "white_blood_cells", "red_blood_cells", "hemoglobin", "glucose", "cholesterol",
+    "diagnosis_code", "diagnosis_description", "procedure_code", 
+    "charge_amount", "service_date", "submitted_date"
+  ]
+}

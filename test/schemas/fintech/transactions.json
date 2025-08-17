@@ -1,0 +1,192 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/fintech/transactions.json",
+  "title": "Financial Transactions Dataset",
+  "description": "Synthetic financial transaction data with realistic patterns and validation",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "pattern": "^TXN[0-9]{12}$",
+      "description": "Unique transaction identifier"
+    },
+    "account_number": {
+      "type": "string",
+      "pattern": "^[0-9]{10,12}$",
+      "description": "Account number (synthetic)"
+    },
+    "routing_number": {
+      "type": "string",
+      "pattern": "^[0-9]{9}$",
+      "description": "ABA routing number with valid checksum"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Transaction timestamp"
+    },
+    "posted_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date transaction was posted"
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 1000000,
+      "multipleOf": 0.01,
+      "description": "Transaction amount in USD"
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USD", "EUR", "GBP", "CAD", "JPY"],
+      "description": "ISO 4217 currency code"
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": ["debit", "credit", "transfer", "payment", "withdrawal", "deposit"],
+      "description": "Type of transaction"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "groceries", "restaurants", "gas", "utilities", "rent", "mortgage",
+        "healthcare", "entertainment", "shopping", "travel", "education",
+        "insurance", "investments", "salary", "bonus", "refund", "other"
+      ],
+      "description": "Transaction category"
+    },
+    "merchant_name": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Realistic merchant name based on category"
+    },
+    "merchant_category_code": {
+      "type": "string",
+      "pattern": "^[0-9]{4}$",
+      "description": "4-digit MCC code"
+    },
+    "description": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Transaction description based on merchant and category"
+    },
+    "location": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "Transaction city"
+        },
+        "state": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "US state abbreviation"
+        },
+        "zip_code": {
+          "type": "string",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+          "description": "ZIP code"
+        },
+        "country": {
+          "type": "string",
+          "enum": ["US", "CA", "MX"],
+          "description": "Country code"
+        }
+      },
+      "required": ["city", "state", "country"]
+    },
+    "risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Fraud risk score (0=low, 100=high)"
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["approved", "declined", "pending", "flagged"],
+      "description": "Transaction approval status"
+    },
+    "fees": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "multipleOf": 0.01,
+      "description": "Associated fees"
+    },
+    "balance_after": {
+      "type": "number",
+      "minimum": -10000,
+      "maximum": 1000000,
+      "multipleOf": 0.01,
+      "description": "Account balance after transaction"
+    }
+  },
+  "required": [
+    "transaction_id",
+    "account_number",
+    "routing_number",
+    "transaction_date",
+    "posted_date",
+    "amount",
+    "currency",
+    "transaction_type",
+    "category",
+    "merchant_category_code",
+    "location",
+    "risk_score",
+    "approval_status",
+    "fees",
+    "balance_after"
+  ],
+  "x-cross-field-rules": [
+    {
+      "name": "date_ordering",
+      "description": "Posted date must be >= transaction date",
+      "fields": ["transaction_date", "posted_date"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "posted_date",
+        "value": "transaction_date"
+      }
+    },
+    {
+      "name": "large_transaction_approval",
+      "description": "Transactions over $10,000 require manual approval",
+      "fields": ["amount", "approval_status"],
+      "rule": "conditional_required",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "approval_status",
+        "value": "pending"
+      }
+    },
+    {
+      "name": "high_risk_flagging",
+      "description": "High risk scores should be flagged",
+      "fields": ["risk_score", "approval_status"],
+      "rule": "conditional_required",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "approval_status",
+        "value": "flagged"
+      }
+    },
+    {
+      "name": "fee_reasonableness",
+      "description": "Fees should not exceed 10% of transaction amount",
+      "fields": ["amount", "fees"],
+      "rule": "amount_range",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "fees",
+        "value": "min(amount * 0.1, fees)"
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# SpecMint golangci-lint configuration
+# Minimal working configuration for production-ready Go code
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - gocritic
+    - revive

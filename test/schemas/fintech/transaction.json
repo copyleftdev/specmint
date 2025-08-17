@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Financial Transaction",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "pattern": "^TXN-[0-9]{10}$"
+    },
+    "account_number": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$"
+    },
+    "routing_number": {
+      "type": "string",
+      "pattern": "^[0-9]{9}$"
+    },
+    "account_type": {
+      "type": "string",
+      "enum": ["checking", "savings", "credit", "investment"]
+    },
+    "amount": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 50000.00
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USD", "EUR", "GBP", "CAD"]
+    },
+    "transaction_type": {
+      "type": "string",
+      "enum": ["debit", "credit", "transfer", "payment", "withdrawal", "deposit"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["groceries", "gas", "dining", "shopping", "utilities", "healthcare", "entertainment"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 100,
+      "x-llm": true,
+      "description": "llm: Generate realistic transaction description based on category"
+    },
+    "merchant_name": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 50,
+      "x-llm": true,
+      "description": "llm: Generate realistic merchant name based on category"
+    },
+    "mcc": {
+      "type": "string",
+      "pattern": "^[0-9]{4}$"
+    },
+    "transaction_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "posted_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "approval_status": {
+      "type": "string",
+      "enum": ["approved", "declined", "pending", "manual_review"]
+    },
+    "previous_balance": {
+      "type": "number"
+    },
+    "new_balance": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "transaction_id", "account_number", "routing_number", "account_type",
+    "amount", "currency", "transaction_type", "category", "description",
+    "merchant_name", "mcc", "transaction_date", "risk_score", "approval_status"
+  ]
+}

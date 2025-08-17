@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 20
+    },
+    "age": {
+      "type": "integer",
+      "minimum": 18,
+      "maximum": 80
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    }
+  },
+  "required": ["id", "name", "age"]
+}

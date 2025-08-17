@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "E-Commerce Product Catalog",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "pattern": "^PRD-[0-9]{6}$"
+    },
+    "sku": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{6}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 80,
+      "x-llm": true,
+      "description": "llm: Generate compelling product name based on category"
+    },
+    "brand": {
+      "type": "string",
+      "enum": ["TechNova", "EcoLife", "SportMax", "HomeComfort", "StyleEdge"]
+    },
+    "category": {
+      "type": "string",
+      "enum": ["electronics", "clothing", "books", "home", "sports"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 50,
+      "maxLength": 200,
+      "x-llm": true,
+      "description": "llm: Generate detailed product description highlighting key features"
+    },
+    "price": {
+      "type": "number",
+      "minimum": 9.99,
+      "maximum": 2999.99
+    },
+    "sale_price": {
+      "type": "number",
+      "minimum": 9.99,
+      "maximum": 2999.99
+    },
+    "currency": {
+      "type": "string",
+      "enum": ["USD", "EUR", "GBP", "CAD"]
+    },
+    "stock_quantity": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1000
+    },
+    "warehouse_location": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}-[A-Z]{3}-[0-9]{3}$"
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1.0,
+      "maximum": 5.0
+    },
+    "review_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000
+    },
+    "availability": {
+      "type": "string",
+      "enum": ["in_stock", "low_stock", "out_of_stock"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "product_id", "sku", "name", "brand", "category", 
+    "description", "price", "currency", "stock_quantity", 
+    "warehouse_location", "availability"
+  ]
+}

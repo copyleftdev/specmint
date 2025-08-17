@@ -1,0 +1,260 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+# Build artifacts
+bin/
+build/
+dist/
+release/
+
+# Output directories
+output/
+*.jsonl
+*.json.gz
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+coverage.out
+coverage.html
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary folders
+tmp/
+temp/
+
+# Security scan reports
+gosec-report.json
+nancy-report.json
+vulncheck-report.json
+
+# Benchmark results
+*.bench
+
+# Profile files
+*.prof
+*.pprof
+
+# Memory dumps
+*.hprof
+
+# Configuration files (keep templates)
+config.yaml
+config.yml
+specmint.yaml
+specmint.yml
+!config.example.yaml
+!config.example.yml
+
+# Local development files
+.local/
+local/
+
+# Docker files
+.dockerignore
+
+# Kubernetes files
+*.k8s.yaml
+*.k8s.yml
+
+# Terraform files
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Completion scripts (generated)
+*-completion.bash
+*-completion.zsh
+*-completion.fish
+
+# Test artifacts
+test-results/
+test-output/
+*.test.json
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Archive files
+*.tar.gz
+*.zip
+*.rar
+
+# Lock files (keep for reproducible builds)
+# Uncomment if you want to ignore lock files
+# go.sum
+
+# Local scripts
+local-*
+dev-*
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+cache/
+
+# Documentation build
+docs/_build/
+site/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Atom
+.atom/
+
+# Eclipse
+.metadata
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.settings/
+.loadpath
+.recommenders
+
+# External tool builders
+.externalToolBuilders/
+
+# Locally stored "Eclipse launch configurations"
+*.launch
+
+# PyDev specific (Python IDE for Eclipse)
+*.pydevproject
+
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# CDT- autotools
+.autotools
+
+# Java annotation processor (APT)
+.factorypath
+
+# PDT-specific (PHP Development Tools)
+.buildpath
+
+# sbteclipse plugin
+.target
+
+# Tern plugin
+.tern-project
+
+# TeXlipse plugin
+.texlipse
+
+# STS (Spring Tool Suite)
+.springBeans
+
+# Code Recommenders
+.recommenders/
+
+# Annotation Processing
+.apt_generated/
+.apt_generated_test/
+
+# Scala IDE specific (Scala & Java IDE for Eclipse)
+.cache-main
+.scala_dependencies
+.worksheet

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Financial Transaction Record",
+  "type": "object",
+  "properties": {
+    "transaction_id": {
+      "type": "string",
+      "pattern": "^TXN-[0-9]{12}$",
+      "description": "Unique transaction identifier"
+    },
+    "account": {
+      "type": "object",
+      "properties": {
+        "account_number": {
+          "type": "string",
+          "pattern": "^[0-9]{10,12}$"
+        },
+        "routing_number": {
+          "type": "string",
+          "pattern": "^[0-9]{9}$",
+          "description": "ABA routing number with checksum validation"
+        },
+        "account_type": {
+          "type": "string",
+          "enum": ["checking", "savings", "credit", "investment", "business"]
+        },
+        "institution": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 50
+        }
+      },
+      "required": ["account_number", "routing_number", "account_type"]
+    },
+    "transaction_details": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 1000000.00
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$",
+          "description": "ISO 4217 currency code"
+        },
+        "transaction_type": {
+          "type": "string",
+          "enum": ["debit", "credit", "transfer", "payment", "withdrawal", "deposit", "fee", "interest"]
+        },
+        "category": {
+          "type": "string",
+          "enum": ["groceries", "gas", "dining", "shopping", "utilities", "healthcare", "entertainment", "travel", "education", "other"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 200,
+          "x-llm": true,
+          "description": "llm: Generate realistic transaction description based on category and merchant"
+        },
+        "merchant": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 50,
+              "x-llm": true,
+              "description": "llm: Generate realistic merchant name based on transaction category"
+            },
+            "mcc": {
+              "type": "string",
+              "pattern": "^[0-9]{4}$",
+              "description": "Merchant Category Code"
+            },
+            "location": {
+              "type": "object",
+              "properties": {
+                "city": {"type": "string", "minLength": 2, "maxLength": 50},
+                "state": {"type": "string", "pattern": "^[A-Z]{2}$"},
+                "country": {"type": "string", "pattern": "^[A-Z]{2}$"},
+                "zip_code": {"type": "string", "pattern": "^[0-9]{5}(-[0-9]{4})?$"}
+              }
+            }
+          },
+          "required": ["name", "mcc"]
+        }
+      },
+      "required": ["amount", "currency", "transaction_type", "category", "description"]
+    },
+    "timestamps": {
+      "type": "object",
+      "properties": {
+        "transaction_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "posted_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "settlement_date": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["transaction_date", "posted_date"]
+    },
+    "risk_assessment": {
+      "type": "object",
+      "properties": {
+        "risk_score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Risk score from 0 (low) to 100 (high)"
+        },
+        "fraud_indicators": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["unusual_amount", "unusual_location", "unusual_time", "velocity_check", "merchant_risk", "device_risk"]
+          }
+        },
+        "approval_status": {
+          "type": "string",
+          "enum": ["approved", "declined", "pending", "manual_review"]
+        },
+        "processor_response": {
+          "type": "string",
+          "pattern": "^[0-9]{2}$"
+        }
+      },
+      "required": ["risk_score", "approval_status"]
+    },
+    "balance_impact": {
+      "type": "object",
+      "properties": {
+        "previous_balance": {
+          "type": "number"
+        },
+        "new_balance": {
+          "type": "number"
+        },
+        "available_credit": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "fees": {
+      "type": "object",
+      "properties": {
+        "processing_fee": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50.00
+        },
+        "foreign_transaction_fee": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10.00
+        },
+        "overdraft_fee": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 50.00
+        }
+      }
+    }
+  },
+  "required": [
+    "transaction_id", "account", "transaction_details", 
+    "timestamps", "risk_assessment"
+  ],
+  "x-cross-field-rules": [
+    {
+      "name": "amount_limits",
+      "description": "Large transactions require approval",
+      "fields": ["transaction_details.amount", "risk_assessment.approval_status"],
+      "rule": "amount > 10000 implies approval_status in ['manual_review', 'approved']",
+      "severity": "error"
+    },
+    {
+      "name": "balance_calculation",
+      "description": "New balance must reflect transaction impact",
+      "fields": ["balance_impact.previous_balance", "balance_impact.new_balance", "transaction_details.amount", "transaction_details.transaction_type"],
+      "rule": "new_balance = previous_balance +/- amount based on type",
+      "severity": "error"
+    },
+    {
+      "name": "date_ordering",
+      "description": "Transaction dates must be in logical order",
+      "fields": ["timestamps.transaction_date", "timestamps.posted_date", "timestamps.settlement_date"],
+      "rule": "transaction_date <= posted_date <= settlement_date",
+      "severity": "error"
+    },
+    {
+      "name": "risk_score_validation",
+      "description": "High risk scores should trigger manual review",
+      "fields": ["risk_assessment.risk_score", "risk_assessment.approval_status"],
+      "rule": "risk_score > 80 implies approval_status in ['declined', 'manual_review']",
+      "severity": "warning"
+    }
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/healthcare/claims.json",
+  "title": "Healthcare Claims Dataset",
+  "description": "Synthetic healthcare insurance claims with HIPAA-compliant fake data",
+  "type": "object",
+  "properties": {
+    "claim_id": {
+      "type": "string",
+      "pattern": "^CLM[0-9]{8}$",
+      "description": "Unique claim identifier"
+    },
+    "patient_id": {
+      "type": "string",
+      "pattern": "^PAT[0-9]{7}$",
+      "description": "De-identified patient ID"
+    },
+    "provider_npi": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$",
+      "description": "National Provider Identifier (10 digits)"
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Patient date of birth"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of service"
+    },
+    "submitted_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Claim submission date"
+    },
+    "diagnosis_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][0-9]{2}(\\.[0-9X]{1,4})?$",
+        "description": "ICD-10 diagnosis code"
+      },
+      "minItems": 1,
+      "maxItems": 5,
+      "description": "Primary and secondary diagnosis codes"
+    },
+    "procedure_codes": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9]{5}$",
+        "description": "CPT procedure code"
+      },
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "Procedure codes performed"
+    },
+    "charge_amount": {
+      "type": "number",
+      "minimum": 10,
+      "maximum": 50000,
+      "multipleOf": 0.01,
+      "description": "Total charge amount in USD"
+    },
+    "allowed_amount": {
+      "type": "number",
+      "minimum": 5,
+      "maximum": 45000,
+      "multipleOf": 0.01,
+      "description": "Insurance allowed amount"
+    },
+    "patient_responsibility": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 10000,
+      "multipleOf": 0.01,
+      "description": "Patient copay/deductible amount"
+    },
+    "claim_status": {
+      "type": "string",
+      "enum": ["submitted", "processed", "paid", "denied", "pending"],
+      "description": "Current claim status"
+    },
+    "specialty": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Medical specialty based on procedure codes (e.g., Cardiology, Orthopedics, Primary Care)"
+    },
+    "notes": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Brief clinical notes about the encounter"
+    }
+  },
+  "required": [
+    "claim_id",
+    "patient_id", 
+    "provider_npi",
+    "date_of_birth",
+    "service_date",
+    "submitted_date",
+    "diagnosis_codes",
+    "procedure_codes",
+    "charge_amount",
+    "allowed_amount",
+    "patient_responsibility",
+    "claim_status"
+  ],
+  "x-cross-field-rules": [
+    {
+      "name": "date_ordering",
+      "description": "Dates must be in logical order: DOB <= Service Date <= Submitted Date",
+      "fields": ["date_of_birth", "service_date", "submitted_date"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "service_date",
+        "params": {
+          "adjustment": 1
+        }
+      }
+    },
+    {
+      "name": "charge_validation",
+      "description": "Allowed amount should not exceed charge amount",
+      "fields": ["charge_amount", "allowed_amount"],
+      "rule": "amount_range",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "allowed_amount",
+        "value": "min(charge_amount * 0.9, allowed_amount)"
+      }
+    },
+    {
+      "name": "patient_responsibility_limit",
+      "description": "Patient responsibility should not exceed allowed amount",
+      "fields": ["allowed_amount", "patient_responsibility"],
+      "rule": "amount_range", 
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "patient_responsibility",
+        "value": "min(allowed_amount * 0.3, patient_responsibility)"
+      }
+    }
+  ]
+}

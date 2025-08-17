@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/ecommerce/products.json",
+  "title": "E-commerce Product Catalog",
+  "description": "Synthetic e-commerce product data with realistic inventory and pricing",
+  "type": "object",
+  "properties": {
+    "product_id": {
+      "type": "string",
+      "pattern": "^PRD[0-9]{8}$",
+      "description": "Unique product identifier"
+    },
+    "sku": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{6}$",
+      "description": "Stock Keeping Unit"
+    },
+    "name": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Product name based on category and attributes"
+    },
+    "description": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Detailed product description highlighting key features"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "electronics", "clothing", "home_garden", "books", "sports",
+        "toys", "automotive", "health_beauty", "jewelry", "food"
+      ],
+      "description": "Product category"
+    },
+    "subcategory": {
+      "type": "string",
+      "description": "Product subcategory"
+    },
+    "brand": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Brand name appropriate for the category"
+    },
+    "price": {
+      "type": "number",
+      "minimum": 0.99,
+      "maximum": 9999.99,
+      "multipleOf": 0.01,
+      "description": "Current price in USD"
+    },
+    "original_price": {
+      "type": "number",
+      "minimum": 0.99,
+      "maximum": 9999.99,
+      "multipleOf": 0.01,
+      "description": "Original/MSRP price"
+    },
+    "cost": {
+      "type": "number",
+      "minimum": 0.50,
+      "maximum": 5000.00,
+      "multipleOf": 0.01,
+      "description": "Product cost/wholesale price"
+    },
+    "inventory_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10000,
+      "description": "Current inventory level"
+    },
+    "warehouse_location": {
+      "type": "string",
+      "pattern": "^WH[0-9]{3}$",
+      "description": "Warehouse location code"
+    },
+    "weight_lbs": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 500.00,
+      "multipleOf": 0.01,
+      "description": "Product weight in pounds"
+    },
+    "dimensions": {
+      "type": "object",
+      "properties": {
+        "length": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 120.0,
+          "description": "Length in inches"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 120.0,
+          "description": "Width in inches"
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 120.0,
+          "description": "Height in inches"
+        }
+      },
+      "required": ["length", "width", "height"]
+    },
+    "rating": {
+      "type": "number",
+      "minimum": 1.0,
+      "maximum": 5.0,
+      "multipleOf": 0.1,
+      "description": "Average customer rating"
+    },
+    "review_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 50000,
+      "description": "Number of customer reviews"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "maxItems": 10,
+      "description": "Product tags for search and filtering"
+    },
+    "is_active": {
+      "type": "boolean",
+      "description": "Whether product is currently active"
+    },
+    "created_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Product creation date"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last update timestamp"
+    },
+    "supplier_id": {
+      "type": "string",
+      "pattern": "^SUP[0-9]{5}$",
+      "description": "Supplier identifier"
+    }
+  },
+  "required": [
+    "product_id",
+    "sku",
+    "name",
+    "category",
+    "price",
+    "original_price",
+    "cost",
+    "inventory_count",
+    "warehouse_location",
+    "weight_lbs",
+    "dimensions",
+    "rating",
+    "review_count",
+    "is_active",
+    "created_date",
+    "last_updated",
+    "supplier_id"
+  ],
+  "x-cross-field-rules": [
+    {
+      "name": "price_consistency",
+      "description": "Current price should not exceed original price",
+      "fields": ["price", "original_price"],
+      "rule": "amount_range",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "price",
+        "value": "min(price, original_price)"
+      }
+    },
+    {
+      "name": "cost_margin",
+      "description": "Price should be higher than cost for profitability",
+      "fields": ["cost", "price"],
+      "rule": "amount_range",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "price",
+        "value": "max(price, cost * 1.2)"
+      }
+    },
+    {
+      "name": "high_value_low_inventory",
+      "description": "High-value items should have lower inventory counts",
+      "fields": ["price", "inventory_count"],
+      "rule": "conditional_required",
+      "severity": "info",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "inventory_count",
+        "params": {
+          "factor": 0.5
+        }
+      }
+    },
+    {
+      "name": "rating_review_consistency",
+      "description": "Products with ratings should have at least 1 review",
+      "fields": ["rating", "review_count"],
+      "rule": "conditional_required",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "review_count",
+        "value": "max(1, review_count)"
+      }
+    },
+    {
+      "name": "date_ordering",
+      "description": "Last updated should be >= created date",
+      "fields": ["created_date", "last_updated"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "last_updated",
+        "value": "created_date"
+      }
+    }
+  ]
+}

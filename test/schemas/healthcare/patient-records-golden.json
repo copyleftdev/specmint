@@ -1,0 +1,462 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Healthcare Patient Record with Diagnostics",
+  "type": "object",
+  "properties": {
+    "patient": {
+      "type": "object",
+      "properties": {
+        "patient_id": {
+          "type": "string",
+          "pattern": "^PT-[0-9]{8}$",
+          "description": "Unique patient identifier"
+        },
+        "mrn": {
+          "type": "string",
+          "pattern": "^MRN[0-9]{7}$",
+          "description": "Medical Record Number"
+        },
+        "demographics": {
+          "type": "object",
+          "properties": {
+            "first_name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "x-llm": true,
+              "description": "llm: Generate realistic first name"
+            },
+            "last_name": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 50,
+              "x-llm": true,
+              "description": "llm: Generate realistic last name"
+            },
+            "date_of_birth": {
+              "type": "string",
+              "format": "date"
+            },
+            "gender": {
+              "type": "string",
+              "enum": ["male", "female", "other", "unknown"]
+            },
+            "race": {
+              "type": "string",
+              "enum": ["white", "black", "asian", "hispanic", "native_american", "pacific_islander", "other", "unknown"]
+            },
+            "ethnicity": {
+              "type": "string",
+              "enum": ["hispanic", "non_hispanic", "unknown"]
+            }
+          },
+          "required": ["first_name", "last_name", "date_of_birth", "gender"]
+        },
+        "contact": {
+          "type": "object",
+          "properties": {
+            "phone": {
+              "type": "string",
+              "pattern": "^\\+?[1-9]\\d{1,14}$"
+            },
+            "email": {
+              "type": "string",
+              "format": "email"
+            },
+            "address": {
+              "type": "object",
+              "properties": {
+                "street": {"type": "string", "minLength": 5, "maxLength": 100},
+                "city": {"type": "string", "minLength": 2, "maxLength": 50},
+                "state": {"type": "string", "pattern": "^[A-Z]{2}$"},
+                "zip_code": {"type": "string", "pattern": "^[0-9]{5}(-[0-9]{4})?$"},
+                "country": {"type": "string", "pattern": "^[A-Z]{2}$"}
+              }
+            }
+          }
+        },
+        "insurance": {
+          "type": "object",
+          "properties": {
+            "primary": {
+              "type": "object",
+              "properties": {
+                "provider": {"type": "string", "minLength": 3, "maxLength": 50},
+                "policy_number": {"type": "string", "pattern": "^[A-Z0-9]{8,15}$"},
+                "group_number": {"type": "string", "pattern": "^[A-Z0-9]{6,12}$"},
+                "effective_date": {"type": "string", "format": "date"}
+              }
+            }
+          }
+        }
+      },
+      "required": ["patient_id", "mrn", "demographics"]
+    },
+    "encounter": {
+      "type": "object",
+      "properties": {
+        "encounter_id": {
+          "type": "string",
+          "pattern": "^ENC-[0-9]{10}$"
+        },
+        "visit_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "visit_type": {
+          "type": "string",
+          "enum": ["routine_checkup", "urgent_care", "emergency", "specialist_consult", "follow_up", "procedure", "lab_only"]
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "npi": {
+              "type": "string",
+              "pattern": "^[0-9]{10}$",
+              "description": "National Provider Identifier"
+            },
+            "name": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 100,
+              "x-llm": true,
+              "description": "llm: Generate realistic physician name with title (Dr.)"
+            },
+            "specialty": {
+              "type": "string",
+              "enum": ["family_medicine", "internal_medicine", "cardiology", "endocrinology", "hematology", "oncology", "neurology", "psychiatry", "emergency_medicine", "pathology"]
+            },
+            "facility": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 100
+            }
+          },
+          "required": ["npi", "name", "specialty"]
+        }
+      },
+      "required": ["encounter_id", "visit_date", "visit_type", "provider"]
+    },
+    "clinical_data": {
+      "type": "object",
+      "properties": {
+        "chief_complaint": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200,
+          "x-llm": true,
+          "description": "llm: Generate realistic chief complaint based on visit type and diagnoses"
+        },
+        "vital_signs": {
+          "type": "object",
+          "properties": {
+            "blood_pressure": {
+              "type": "object",
+              "properties": {
+                "systolic": {"type": "integer", "minimum": 70, "maximum": 250},
+                "diastolic": {"type": "integer", "minimum": 40, "maximum": 150},
+                "unit": {"type": "string", "enum": ["mmHg"]}
+              }
+            },
+            "heart_rate": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "integer", "minimum": 40, "maximum": 200},
+                "unit": {"type": "string", "enum": ["bpm"]}
+              }
+            },
+            "temperature": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "number", "minimum": 95.0, "maximum": 110.0},
+                "unit": {"type": "string", "enum": ["F", "C"]}
+              }
+            },
+            "respiratory_rate": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "integer", "minimum": 8, "maximum": 40},
+                "unit": {"type": "string", "enum": ["breaths/min"]}
+              }
+            },
+            "oxygen_saturation": {
+              "type": "object",
+              "properties": {
+                "value": {"type": "integer", "minimum": 70, "maximum": 100},
+                "unit": {"type": "string", "enum": ["%"]}
+              }
+            }
+          }
+        },
+        "laboratory_results": {
+          "type": "object",
+          "properties": {
+            "complete_blood_count": {
+              "type": "object",
+              "properties": {
+                "white_blood_cells": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 2.0, "maximum": 20.0},
+                    "unit": {"type": "string", "enum": ["K/uL"]},
+                    "reference_range": {"type": "string", "enum": ["4.5-11.0"]}
+                  }
+                },
+                "red_blood_cells": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 3.0, "maximum": 7.0},
+                    "unit": {"type": "string", "enum": ["M/uL"]},
+                    "reference_range": {"type": "string", "enum": ["4.2-5.4"]}
+                  }
+                },
+                "hemoglobin": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 8.0, "maximum": 20.0},
+                    "unit": {"type": "string", "enum": ["g/dL"]},
+                    "reference_range": {"type": "string", "enum": ["12.0-15.5"]}
+                  }
+                },
+                "hematocrit": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 25.0, "maximum": 55.0},
+                    "unit": {"type": "string", "enum": ["%"]},
+                    "reference_range": {"type": "string", "enum": ["36.0-46.0"]}
+                  }
+                },
+                "platelets": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 50, "maximum": 800},
+                    "unit": {"type": "string", "enum": ["K/uL"]},
+                    "reference_range": {"type": "string", "enum": ["150-450"]}
+                  }
+                }
+              }
+            },
+            "basic_metabolic_panel": {
+              "type": "object",
+              "properties": {
+                "glucose": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 50, "maximum": 500},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["70-100"]}
+                  }
+                },
+                "sodium": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 125, "maximum": 155},
+                    "unit": {"type": "string", "enum": ["mEq/L"]},
+                    "reference_range": {"type": "string", "enum": ["136-145"]}
+                  }
+                },
+                "potassium": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 2.5, "maximum": 6.0},
+                    "unit": {"type": "string", "enum": ["mEq/L"]},
+                    "reference_range": {"type": "string", "enum": ["3.5-5.0"]}
+                  }
+                },
+                "creatinine": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "number", "minimum": 0.5, "maximum": 10.0},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["0.7-1.3"]}
+                  }
+                },
+                "bun": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 5, "maximum": 100},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["7-20"]}
+                  }
+                }
+              }
+            },
+            "lipid_panel": {
+              "type": "object",
+              "properties": {
+                "total_cholesterol": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 100, "maximum": 400},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["<200"]}
+                  }
+                },
+                "ldl_cholesterol": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 50, "maximum": 300},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["<100"]}
+                  }
+                },
+                "hdl_cholesterol": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 20, "maximum": 100},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": [">40"]}
+                  }
+                },
+                "triglycerides": {
+                  "type": "object",
+                  "properties": {
+                    "value": {"type": "integer", "minimum": 50, "maximum": 1000},
+                    "unit": {"type": "string", "enum": ["mg/dL"]},
+                    "reference_range": {"type": "string", "enum": ["<150"]}
+                  }
+                }
+              }
+            }
+          }
+        },
+        "diagnoses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "icd10_code": {
+                "type": "string",
+                "pattern": "^[A-Z][0-9]{2}(\\.[0-9X]{1,4})?$",
+                "description": "ICD-10 diagnosis code"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 200,
+                "x-llm": true,
+                "description": "llm: Generate medical diagnosis description based on ICD-10 code"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["primary", "secondary", "comorbidity"]
+              },
+              "severity": {
+                "type": "string",
+                "enum": ["mild", "moderate", "severe", "critical"]
+              },
+              "onset_date": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": ["icd10_code", "description", "type"]
+          },
+          "minItems": 1,
+          "maxItems": 10
+        },
+        "procedures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "cpt_code": {
+                "type": "string",
+                "pattern": "^[0-9]{5}$",
+                "description": "CPT procedure code"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 200
+              },
+              "procedure_date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "provider_npi": {
+                "type": "string",
+                "pattern": "^[0-9]{10}$"
+              }
+            },
+            "required": ["cpt_code", "description", "procedure_date"]
+          }
+        }
+      }
+    },
+    "billing": {
+      "type": "object",
+      "properties": {
+        "claim_id": {
+          "type": "string",
+          "pattern": "^CLM-[0-9]{10}$"
+        },
+        "charges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_code": {"type": "string", "pattern": "^[0-9]{5}$"},
+              "charge_amount": {"type": "number", "minimum": 10.00, "maximum": 50000.00},
+              "units": {"type": "integer", "minimum": 1, "maximum": 10}
+            }
+          }
+        },
+        "total_charges": {
+          "type": "number",
+          "minimum": 10.00,
+          "maximum": 50000.00
+        },
+        "service_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "submitted_date": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "required": ["claim_id", "charges", "total_charges", "service_date"]
+    }
+  },
+  "required": [
+    "patient", "encounter", "clinical_data", "billing"
+  ],
+  "x-cross-field-rules": [
+    {
+      "name": "date_ordering",
+      "description": "Patient DOB must be before service date",
+      "fields": ["patient.demographics.date_of_birth", "billing.service_date"],
+      "rule": "date_of_birth < service_date",
+      "severity": "error"
+    },
+    {
+      "name": "service_date_ordering",
+      "description": "Service date must be before or equal to submitted date",
+      "fields": ["billing.service_date", "billing.submitted_date"],
+      "rule": "service_date <= submitted_date",
+      "severity": "error"
+    },
+    {
+      "name": "charge_amount_validation",
+      "description": "Charge amounts must be realistic for healthcare",
+      "fields": ["billing.total_charges"],
+      "rule": "total_charges >= 10 && total_charges <= 50000",
+      "severity": "error"
+    },
+    {
+      "name": "vital_signs_correlation",
+      "description": "Blood pressure values should be medically plausible",
+      "fields": ["clinical_data.vital_signs.blood_pressure.systolic", "clinical_data.vital_signs.blood_pressure.diastolic"],
+      "rule": "systolic > diastolic && (systolic - diastolic) >= 20",
+      "severity": "warning"
+    },
+    {
+      "name": "lab_values_correlation",
+      "description": "Hemoglobin and hematocrit should correlate (Hct ≈ 3 × Hgb)",
+      "fields": ["clinical_data.laboratory_results.complete_blood_count.hemoglobin.value", "clinical_data.laboratory_results.complete_blood_count.hematocrit.value"],
+      "rule": "hematocrit ≈ (hemoglobin * 3) ± 3",
+      "severity": "warning"
+    }
+  ]
+}
