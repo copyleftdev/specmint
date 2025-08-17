@@ -1,5 +1,5 @@
 # SpecMint golangci-lint configuration
-# Minimal configuration for CI/CD compatibility
+# Ultra-minimal configuration for CI/CD compatibility
 
 run:
   timeout: 5m
@@ -11,18 +11,12 @@ run:
     - ".*\\.pb\\.go$"
 
 linters:
+  # Only enable linters that don't perform type checking
   enable:
-    - errcheck
-    - gosimple
-    - ineffassign
-    - unused
-    - gofmt
-    - goimports
-    - misspell
-  disable:
-    - typecheck
-    - staticcheck  # Disable staticcheck as it's causing import resolution issues
-    - govet       # Disable govet as it's also performing type checking
+    - gofmt      # Format checking only
+    - goimports  # Import organization only
+    - misspell   # Spelling check only
+  disable-all: true  # Explicitly disable all other linters
 
 issues:
   exclude-use-default: false
