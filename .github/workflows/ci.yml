@@ -148,6 +148,7 @@ jobs:
       - name: Run Unit Tests
         env:
           SKIP_OLLAMA_TESTS: "true"  # Skip Ollama tests in CI
+        shell: bash
         run: go test -v -race -coverprofile=coverage.out ./...
 
       - name: Generate Coverage Report
