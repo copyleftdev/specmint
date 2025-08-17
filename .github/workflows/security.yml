@@ -80,7 +80,7 @@ jobs:
           fi
 
       - name: Upload Security Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-analysis-report
           path: |
@@ -132,7 +132,7 @@ jobs:
           fi
 
       - name: Upload Vulnerability Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: vulnerability-scan-report
@@ -192,7 +192,7 @@ jobs:
           go list -m all >> deps-report.md
 
       - name: Upload Dependency Audit Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: dependency-audit-report
@@ -210,7 +210,7 @@ jobs:
     if: always()
     steps:
       - name: Download All Reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
 
       - name: Generate Security Summary
         run: |
@@ -242,7 +242,7 @@ jobs:
           echo "- Commit: ${{ github.sha }}" >> SECURITY_SUMMARY.md
 
       - name: Upload Security Summary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: security-summary
           path: SECURITY_SUMMARY.md
