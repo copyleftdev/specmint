@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 FHIR Patient Resource",
+  "description": "FHIR R4 Patient resource with comprehensive demographics and identifiers",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "birthDate <= today",
+      "description": "Birth date must be in the past"
+    },
+    {
+      "rule": "if deceased.boolean == true then deceasedDateTime must be present",
+      "description": "Deceased patients must have death date"
+    }
+  ],
+  "required": ["resourceType", "id", "identifier", "name", "gender"],
+  "properties": {
+    "resourceType": {
+      "type": "string",
+      "const": "Patient"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-\\.]{1,64}$",
+      "description": "Logical id of this artifact"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "versionId": {"type": "string"},
+        "lastUpdated": {"type": "string", "format": "date-time"},
+        "profile": {
+          "type": "array",
+          "items": {"type": "string", "format": "uri"}
+        }
+      }
+    },
+    "identifier": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["system", "value"],
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["usual", "official", "temp", "secondary"]
+          },
+          "type": {
+            "type": "object",
+            "properties": {
+              "coding": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {"type": "string", "format": "uri"},
+                    "code": {"type": "string"},
+                    "display": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "system": {
+            "type": "string",
+            "format": "uri",
+            "examples": [
+              "http://hl7.org/fhir/sid/us-ssn",
+              "http://hl7.org/fhir/sid/us-medicare",
+              "urn:oid:2.16.840.1.113883.4.1"
+            ]
+          },
+          "value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic medical record number or SSN format"
+          }
+        }
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether this patient record is in active use"
+    },
+    "name": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["family"],
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["usual", "official", "temp", "nickname", "anonymous", "old", "maiden"]
+          },
+          "family": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic family name"
+          },
+          "given": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic given names"
+            }
+          },
+          "prefix": {
+            "type": "array",
+            "items": {"type": "string"},
+            "examples": ["Dr.", "Mr.", "Mrs.", "Ms."]
+          },
+          "suffix": {
+            "type": "array",
+            "items": {"type": "string"},
+            "examples": ["Jr.", "Sr.", "III", "MD", "PhD"]
+          }
+        }
+      }
+    },
+    "telecom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "system": {
+            "type": "string",
+            "enum": ["phone", "fax", "email", "pager", "url", "sms", "other"]
+          },
+          "value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic contact information based on system type"
+          },
+          "use": {
+            "type": "string",
+            "enum": ["home", "work", "temp", "old", "mobile"]
+          },
+          "rank": {"type": "integer", "minimum": 1}
+        }
+      }
+    },
+    "gender": {
+      "type": "string",
+      "enum": ["male", "female", "other", "unknown"]
+    },
+    "birthDate": {
+      "type": "string",
+      "format": "date",
+      "description": "The date of birth for the individual"
+    },
+    "deceased": {
+      "oneOf": [
+        {"type": "boolean"},
+        {"type": "string", "format": "date-time"}
+      ]
+    },
+    "address": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "use": {
+            "type": "string",
+            "enum": ["home", "work", "temp", "old", "billing"]
+          },
+          "type": {
+            "type": "string",
+            "enum": ["postal", "physical", "both"]
+          },
+          "line": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic street address"
+            }
+          },
+          "city": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic city name"
+          },
+          "district": {"type": "string"},
+          "state": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "description": "US state abbreviation"
+          },
+          "postalCode": {
+            "type": "string",
+            "pattern": "^\\d{5}(-\\d{4})?$",
+            "description": "US ZIP code format"
+          },
+          "country": {
+            "type": "string",
+            "default": "US"
+          }
+        }
+      }
+    },
+    "maritalStatus": {
+      "type": "object",
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "type": "string",
+                "const": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus"
+              },
+              "code": {
+                "type": "string",
+                "enum": ["A", "D", "I", "L", "M", "P", "S", "T", "U", "W"]
+              },
+              "display": {
+                "type": "string",
+                "enum": ["Annulled", "Divorced", "Interlocutory", "Legally Separated", "Married", "Polygamous", "Never Married", "Domestic partner", "unmarried", "Widowed"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "contact": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relationship": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "coding": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "system": {"type": "string"},
+                      "code": {"type": "string"},
+                      "display": {"type": "string"}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "name": {
+            "type": "object",
+            "properties": {
+              "family": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic contact family name"
+              },
+              "given": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "x-llm": true,
+                  "description": "llm: Generate realistic contact given names"
+                }
+              }
+            }
+          },
+          "telecom": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "system": {"type": "string"},
+                "value": {
+                  "type": "string",
+                  "x-llm": true,
+                  "description": "llm: Generate realistic contact information"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "communication": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "type": "object",
+            "properties": {
+              "coding": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "const": "urn:ietf:bcp:47"
+                    },
+                    "code": {
+                      "type": "string",
+                      "examples": ["en-US", "es-ES", "fr-FR", "de-DE"]
+                    },
+                    "display": {
+                      "type": "string",
+                      "examples": ["English (United States)", "Spanish (Spain)", "French (France)", "German (Germany)"]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "preferred": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

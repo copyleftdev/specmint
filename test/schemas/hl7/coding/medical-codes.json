@@ -1,0 +1,524 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Medical Coding Systems",
+  "description": "Comprehensive medical coding support for ICD-10, CPT, SNOMED CT, and LOINC",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "if coding_system == 'ICD10CM' then code must match ICD-10-CM format",
+      "description": "ICD-10-CM codes must follow proper format"
+    },
+    {
+      "rule": "if coding_system == 'CPT' then code must be 5 digits",
+      "description": "CPT codes must be exactly 5 digits"
+    }
+  ],
+  "required": ["coding_system", "code", "display"],
+  "properties": {
+    "coding_system": {
+      "type": "string",
+      "enum": ["ICD10CM", "ICD10PCS", "CPT", "HCPCS", "SNOMED_CT", "LOINC", "RxNorm", "NDC"]
+    },
+    "code": {
+      "type": "string",
+      "description": "Medical code value"
+    },
+    "display": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Generate realistic medical code description based on coding system and code"
+    },
+    "system_uri": {
+      "type": "string",
+      "enum": [
+        "http://hl7.org/fhir/sid/icd-10-cm",
+        "http://hl7.org/fhir/sid/icd-10-pcs",
+        "http://www.ama-assn.org/go/cpt",
+        "https://www.cms.gov/Medicare/Coding/HCPCSReleaseCodeSets",
+        "http://snomed.info/sct",
+        "http://loinc.org",
+        "http://www.nlm.nih.gov/research/umls/rxnorm",
+        "http://hl7.org/fhir/sid/ndc"
+      ]
+    },
+    "version": {"type": "string"},
+    "icd10_codes": {
+      "type": "object",
+      "title": "ICD-10-CM Diagnosis Codes",
+      "properties": {
+        "category_A": {
+          "type": "array",
+          "title": "Certain infectious and parasitic diseases (A00-B99)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[A-B]\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["A00.0", "A15.9", "B20", "B96.89"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic infectious disease diagnosis"
+              }
+            }
+          }
+        },
+        "category_C": {
+          "type": "array",
+          "title": "Neoplasms (C00-D49)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[C-D]\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["C50.911", "C78.00", "D12.6", "D49.2"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic neoplasm diagnosis"
+              }
+            }
+          }
+        },
+        "category_E": {
+          "type": "array",
+          "title": "Endocrine, nutritional and metabolic diseases (E00-E89)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^E\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["E11.9", "E78.5", "E87.1", "E10.65"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic endocrine/metabolic diagnosis"
+              }
+            }
+          }
+        },
+        "category_I": {
+          "type": "array",
+          "title": "Diseases of the circulatory system (I00-I99)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^I\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["I10", "I25.10", "I48.91", "I50.9"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic cardiovascular diagnosis"
+              }
+            }
+          }
+        },
+        "category_J": {
+          "type": "array",
+          "title": "Diseases of the respiratory system (J00-J99)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^J\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["J44.1", "J18.9", "J45.909", "J06.9"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic respiratory diagnosis"
+              }
+            }
+          }
+        },
+        "category_Z": {
+          "type": "array",
+          "title": "Factors influencing health status (Z00-Z99)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^Z\\d{2}(\\.\\d{1,3})?$",
+                "examples": ["Z00.00", "Z51.11", "Z87.891", "Z12.31"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic health status factor"
+              }
+            }
+          }
+        }
+      }
+    },
+    "cpt_codes": {
+      "type": "object",
+      "title": "CPT Procedure Codes",
+      "properties": {
+        "evaluation_management": {
+          "type": "array",
+          "title": "Evaluation and Management (99202-99499)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^99[2-4]\\d{2}$",
+                "examples": ["99213", "99214", "99232", "99283"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic E&M service description"
+              },
+              "work_rvu": {"type": "number", "minimum": 0},
+              "facility_pe_rvu": {"type": "number", "minimum": 0},
+              "non_facility_pe_rvu": {"type": "number", "minimum": 0},
+              "malpractice_rvu": {"type": "number", "minimum": 0}
+            }
+          }
+        },
+        "surgery": {
+          "type": "array",
+          "title": "Surgery (10021-69990)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[1-6]\\d{4}$",
+                "examples": ["10021", "19301", "27447", "43239"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic surgical procedure description"
+              },
+              "global_period": {
+                "type": "string",
+                "enum": ["000", "010", "090", "XXX", "YYY", "ZZZ", "MMM"]
+              }
+            }
+          }
+        },
+        "radiology": {
+          "type": "array",
+          "title": "Radiology (70010-79999)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^7\\d{4}$",
+                "examples": ["71020", "72148", "74177", "76700"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic radiology procedure description"
+              },
+              "contrast": {"type": "boolean"},
+              "bilateral": {"type": "boolean"}
+            }
+          }
+        },
+        "pathology_laboratory": {
+          "type": "array",
+          "title": "Pathology and Laboratory (80047-89398)",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^8\\d{4}$",
+                "examples": ["80053", "85025", "87086", "88305"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic lab test description"
+              },
+              "specimen_type": {
+                "type": "string",
+                "examples": ["Blood", "Urine", "Tissue", "Swab", "CSF"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "snomed_codes": {
+      "type": "object",
+      "title": "SNOMED CT Concepts",
+      "properties": {
+        "clinical_findings": {
+          "type": "array",
+          "title": "Clinical Findings",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{6,18}$",
+                "examples": ["386661006", "233604007", "44054006", "195967001"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic clinical finding description"
+              },
+              "semantic_tag": {"type": "string", "const": "finding"}
+            }
+          }
+        },
+        "procedures": {
+          "type": "array",
+          "title": "Procedures",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{6,18}$",
+                "examples": ["80146002", "232717009", "18946005", "387713003"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic procedure description"
+              },
+              "semantic_tag": {"type": "string", "const": "procedure"}
+            }
+          }
+        },
+        "body_structures": {
+          "type": "array",
+          "title": "Body Structures",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{6,18}$",
+                "examples": ["80891009", "39607008", "21483005", "113262008"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic anatomical structure name"
+              },
+              "semantic_tag": {"type": "string", "const": "body structure"}
+            }
+          }
+        },
+        "substances": {
+          "type": "array",
+          "title": "Substances",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{6,18}$",
+                "examples": ["387517004", "396458002", "108774000", "387207008"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic substance name"
+              },
+              "semantic_tag": {"type": "string", "const": "substance"}
+            }
+          }
+        }
+      }
+    },
+    "loinc_codes": {
+      "type": "object",
+      "title": "LOINC Laboratory Codes",
+      "properties": {
+        "laboratory": {
+          "type": "array",
+          "title": "Laboratory Tests",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{1,5}-\\d{1}$",
+                "examples": ["33747-0", "2339-0", "6690-2", "1975-2"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic lab test name"
+              },
+              "component": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate lab component being measured"
+              },
+              "property": {
+                "type": "string",
+                "enum": ["MCnc", "SCnc", "ACnc", "Num", "Ord", "Qn", "Qlty"]
+              },
+              "time_aspect": {
+                "type": "string",
+                "enum": ["Pt", "24H", "12H", "8H", "6H", "4H", "2H", "1H", "30M"]
+              },
+              "system": {
+                "type": "string",
+                "examples": ["Ser", "Plas", "Bld", "Ur", "CSF", "Spt"]
+              },
+              "scale": {
+                "type": "string",
+                "enum": ["Qn", "Ord", "Nom", "Nar", "Multi", "Doc", "Set"]
+              },
+              "method": {
+                "type": "string",
+                "examples": ["Enzymatic", "Immunoassay", "Chromatography", "Spectrophotometry"]
+              }
+            }
+          }
+        },
+        "vital_signs": {
+          "type": "array",
+          "title": "Vital Signs",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^\\d{1,5}-\\d{1}$",
+                "examples": ["8480-6", "8462-4", "8867-4", "3141-9"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic vital sign name"
+              },
+              "units": {
+                "type": "string",
+                "examples": ["mm[Hg]", "/min", "Cel", "kg", "cm", "%"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "rxnorm_codes": {
+      "type": "object",
+      "title": "RxNorm Medication Codes",
+      "properties": {
+        "medications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rxcui": {
+                "type": "string",
+                "pattern": "^\\d{1,8}$",
+                "examples": ["161", "8640", "197361", "1049502"]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic medication name with strength and form"
+              },
+              "ingredient": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate medication active ingredient"
+              },
+              "strength": {
+                "type": "string",
+                "examples": ["5 mg", "10 mg", "25 mg", "100 mg", "500 mg"]
+              },
+              "dose_form": {
+                "type": "string",
+                "examples": ["Tablet", "Capsule", "Solution", "Injection", "Cream", "Ointment"]
+              },
+              "route": {
+                "type": "string",
+                "examples": ["Oral", "Intravenous", "Intramuscular", "Topical", "Sublingual"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "validation_rules": {
+      "type": "object",
+      "title": "Medical Coding Validation Rules",
+      "properties": {
+        "icd10_validation": {
+          "type": "object",
+          "properties": {
+            "format_rules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "examples": [
+                  "ICD-10-CM codes must be 3-7 characters",
+                  "First character must be alphabetic",
+                  "Second and third characters must be numeric",
+                  "Decimal point required for codes >3 characters"
+                ]
+              }
+            },
+            "clinical_rules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "examples": [
+                  "Primary diagnosis must be present",
+                  "External cause codes (V00-Y99) cannot be primary",
+                  "Z codes for encounters must match service type"
+                ]
+              }
+            }
+          }
+        },
+        "cpt_validation": {
+          "type": "object",
+          "properties": {
+            "format_rules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "examples": [
+                  "CPT codes must be exactly 5 digits",
+                  "Category I codes: 00100-99499",
+                  "Category II codes: 0001F-9999F",
+                  "Category III codes: 0001T-9999T"
+                ]
+              }
+            },
+            "billing_rules": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "examples": [
+                  "E&M codes require appropriate documentation level",
+                  "Surgical codes include global period services",
+                  "Modifier usage must be clinically appropriate"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

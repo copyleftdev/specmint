@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 FHIR Observation Resource",
+  "description": "FHIR R4 Observation resource for clinical measurements and assessments",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "effectiveDateTime <= issued",
+      "description": "Observation effective time must be before or equal to issued time"
+    },
+    {
+      "rule": "if status == 'final' then value must be present",
+      "description": "Final observations must have a value"
+    }
+  ],
+  "required": ["resourceType", "id", "status", "code", "subject"],
+  "properties": {
+    "resourceType": {
+      "type": "string",
+      "const": "Observation"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-\\.]{1,64}$"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "versionId": {"type": "string"},
+        "lastUpdated": {"type": "string", "format": "date-time"},
+        "profile": {
+          "type": "array",
+          "items": {"type": "string", "format": "uri"}
+        }
+      }
+    },
+    "identifier": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "system": {"type": "string", "format": "uri"},
+          "value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic observation identifier"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["registered", "preliminary", "final", "amended", "corrected", "cancelled", "entered-in-error", "unknown"]
+    },
+    "category": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "coding": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "system": {
+                  "type": "string",
+                  "const": "http://terminology.hl7.org/CodeSystem/observation-category"
+                },
+                "code": {
+                  "type": "string",
+                  "enum": ["social-history", "vital-signs", "imaging", "laboratory", "procedure", "survey", "exam", "therapy", "activity"]
+                },
+                "display": {
+                  "type": "string",
+                  "enum": ["Social History", "Vital Signs", "Imaging", "Laboratory", "Procedure", "Survey", "Exam", "Therapy", "Activity"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "required": ["coding"],
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["system", "code"],
+            "properties": {
+              "system": {
+                "type": "string",
+                "enum": [
+                  "http://loinc.org",
+                  "http://snomed.info/sct",
+                  "http://www.ama-assn.org/go/cpt"
+                ]
+              },
+              "code": {
+                "type": "string",
+                "examples": [
+                  "8480-6",
+                  "8462-4", 
+                  "33747-0",
+                  "72166-2",
+                  "85354-9"
+                ]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate appropriate medical observation name based on code"
+              }
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate human-readable observation description"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["reference"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^Patient/[A-Za-z0-9\\-\\.]{1,64}$"
+        },
+        "display": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate patient display name"
+        }
+      }
+    },
+    "encounter": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^Encounter/[A-Za-z0-9\\-\\.]{1,64}$"
+        }
+      }
+    },
+    "effectiveDateTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Clinically relevant time/time-period for observation"
+    },
+    "issued": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date/Time this version was made available"
+    },
+    "performer": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^(Practitioner|PractitionerRole|Organization)/[A-Za-z0-9\\-\\.]{1,64}$"
+          },
+          "display": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate healthcare provider name"
+          }
+        }
+      }
+    },
+    "valueQuantity": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number",
+          "description": "Numerical value (with implicit precision)"
+        },
+        "unit": {
+          "type": "string",
+          "examples": ["mmHg", "mg/dL", "bpm", "°C", "kg", "cm"]
+        },
+        "system": {
+          "type": "string",
+          "const": "http://unitsofmeasure.org"
+        },
+        "code": {
+          "type": "string",
+          "examples": ["mm[Hg]", "mg/dL", "/min", "Cel", "kg", "cm"]
+        }
+      }
+    },
+    "valueCodeableConcept": {
+      "type": "object",
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {"type": "string"},
+              "code": {"type": "string"},
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate appropriate coded observation value"
+              }
+            }
+          }
+        }
+      }
+    },
+    "valueString": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Generate appropriate text observation value"
+    },
+    "dataAbsentReason": {
+      "type": "object",
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "type": "string",
+                "const": "http://terminology.hl7.org/CodeSystem/data-absent-reason"
+              },
+              "code": {
+                "type": "string",
+                "enum": ["unknown", "asked-unknown", "temp-unknown", "not-asked", "asked-declined", "masked", "not-applicable", "unsupported", "as-text", "error", "not-a-number", "negative-infinity", "positive-infinity", "not-performed", "not-permitted"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "interpretation": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "coding": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "system": {
+                  "type": "string",
+                  "const": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation"
+                },
+                "code": {
+                  "type": "string",
+                  "enum": ["N", "A", "AA", "HH", "LL", "H", "L", "HX", "LX"]
+                },
+                "display": {
+                  "type": "string",
+                  "enum": ["Normal", "Abnormal", "Critical abnormal", "Critical high", "Critical low", "High", "Low", "Above high normal", "Below low normal"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "note": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate relevant clinical note about the observation"
+          },
+          "time": {"type": "string", "format": "date-time"},
+          "authorString": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate healthcare provider name for note author"
+          }
+        }
+      }
+    },
+    "referenceRange": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "low": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number"},
+              "unit": {"type": "string"},
+              "system": {"type": "string"},
+              "code": {"type": "string"}
+            }
+          },
+          "high": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number"},
+              "unit": {"type": "string"},
+              "system": {"type": "string"},
+              "code": {"type": "string"}
+            }
+          },
+          "text": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate reference range description"
+          }
+        }
+      }
+    },
+    "component": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "object",
+            "properties": {
+              "coding": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {"type": "string"},
+                    "code": {"type": "string"},
+                    "display": {
+                      "type": "string",
+                      "x-llm": true,
+                      "description": "llm: Generate component observation name"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "valueQuantity": {
+            "type": "object",
+            "properties": {
+              "value": {"type": "number"},
+              "unit": {"type": "string"},
+              "system": {"type": "string"},
+              "code": {"type": "string"}
+            }
+          }
+        }
+      }
+    }
+  }
+}

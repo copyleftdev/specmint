@@ -1,0 +1,393 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 v2.x ORU^R01 - Observation Result Message",
+  "description": "HL7 v2.x ORU R01 message for unsolicited transmission of observation results",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "OBR.observation_datetime <= MSH.timestamp",
+      "description": "Observation time must be before or equal to message timestamp"
+    },
+    {
+      "rule": "if OBX.observation_result_status == 'F' then OBX.observation_value must be present",
+      "description": "Final results must have observation values"
+    }
+  ],
+  "required": ["MSH", "PID", "OBR", "OBX"],
+  "properties": {
+    "MSH": {
+      "type": "object",
+      "title": "Message Header",
+      "required": ["field_separator", "encoding_characters", "sending_application", "sending_facility", "receiving_application", "receiving_facility", "timestamp", "message_type", "message_control_id", "processing_id", "version_id"],
+      "properties": {
+        "field_separator": {"type": "string", "const": "|"},
+        "encoding_characters": {"type": "string", "const": "^~\\&"},
+        "sending_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic laboratory information system name"
+        },
+        "sending_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic laboratory facility name"
+        },
+        "receiving_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving system name"
+        },
+        "receiving_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving facility name"
+        },
+        "timestamp": {
+          "type": "string",
+          "pattern": "^\\d{14}$",
+          "description": "YYYYMMDDHHMMSS format"
+        },
+        "message_type": {
+          "type": "object",
+          "properties": {
+            "message_code": {"type": "string", "const": "ORU"},
+            "trigger_event": {"type": "string", "const": "R01"},
+            "message_structure": {"type": "string", "const": "ORU_R01"}
+          }
+        },
+        "message_control_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "processing_id": {
+          "type": "string",
+          "enum": ["P", "T", "D"]
+        },
+        "version_id": {
+          "type": "string",
+          "enum": ["2.3", "2.4", "2.5", "2.6", "2.7", "2.8"]
+        }
+      }
+    },
+    "PID": {
+      "type": "object",
+      "title": "Patient Identification",
+      "required": ["patient_id", "patient_name", "birth_date", "sex"],
+      "properties": {
+        "set_id": {"type": "integer", "const": 1},
+        "patient_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "patient_identifier_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id_number": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic medical record number"
+              },
+              "assigning_authority": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic assigning authority"
+              },
+              "identifier_type_code": {
+                "type": "string",
+                "enum": ["MR", "SS", "DL", "PPN", "BR", "MC"]
+              }
+            }
+          }
+        },
+        "patient_name": {
+          "type": "object",
+          "properties": {
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic family name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic given name"
+            },
+            "middle_initial": {"type": "string", "maxLength": 1},
+            "suffix": {"type": "string"},
+            "prefix": {"type": "string"},
+            "name_type_code": {"type": "string", "enum": ["L", "A", "B", "C", "M"]}
+          }
+        },
+        "birth_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "sex": {
+          "type": "string",
+          "enum": ["M", "F", "O", "U"]
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "street_address": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic street address"
+            },
+            "city": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic city name"
+            },
+            "state_or_province": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "zip_or_postal_code": {
+              "type": "string",
+              "pattern": "^\\d{5}(-\\d{4})?$"
+            }
+          }
+        },
+        "phone_number_home": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        }
+      }
+    },
+    "OBR": {
+      "type": "object",
+      "title": "Observation Request",
+      "required": ["set_id", "universal_service_identifier", "observation_datetime"],
+      "properties": {
+        "set_id": {"type": "integer"},
+        "placer_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "filler_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "universal_service_identifier": {
+          "type": "object",
+          "required": ["identifier"],
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "examples": ["CBC", "CMP", "LIPID", "TSH", "PSA", "HBA1C", "PT", "PTT", "INR", "UA", "CULTURE", "MICRO", "PATH"]
+            },
+            "text": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic lab test name based on identifier"
+            },
+            "name_of_coding_system": {
+              "type": "string",
+              "enum": ["LN", "CPT4", "SNM", "LOCAL"]
+            }
+          }
+        },
+        "observation_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "observation_end_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "specimen_received_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "specimen_source": {
+          "type": "object",
+          "properties": {
+            "specimen_name": {
+              "type": "string",
+              "examples": ["BLOOD", "URINE", "SERUM", "PLASMA", "CSF", "SPUTUM", "STOOL", "TISSUE", "SWAB"]
+            },
+            "specimen_collection_method": {
+              "type": "string",
+              "examples": ["VENIPUNCTURE", "FINGERSTICK", "HEELSTICK", "ARTERIAL", "CATHETER", "MIDSTREAM", "CLEAN_CATCH"]
+            },
+            "body_site": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic anatomical collection site"
+            }
+          }
+        },
+        "ordering_provider": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider given name"
+            },
+            "prefix": {"type": "string", "default": "Dr"}
+          }
+        },
+        "result_status": {
+          "type": "string",
+          "enum": ["O", "P", "F", "C", "A", "I", "S", "X", "Y", "Z"]
+        },
+        "results_rpt_status_change_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "diagnostic_serv_sect_id": {
+          "type": "string",
+          "enum": ["AU", "BG", "BLB", "CUS", "CTH", "CT", "CH", "CP", "EC", "EN", "GE", "HM", "ICU", "IMM", "LAB", "MB", "MCB", "MYC", "NMR", "NMS", "NRS", "OSL", "OT", "OTH", "OUS", "PHR", "PHY", "PT", "RAD", "RC", "RT", "RX", "SP", "SR", "TX", "VUS", "VR", "XRC"]
+        },
+        "principal_result_interpreter": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic interpreting provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic interpreting provider given name"
+            }
+          }
+        }
+      }
+    },
+    "OBX": {
+      "type": "array",
+      "title": "Observation/Result",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["set_id", "value_type", "observation_identifier", "observation_result_status"],
+        "properties": {
+          "set_id": {"type": "integer"},
+          "value_type": {
+            "type": "string",
+            "enum": ["AD", "CE", "CF", "CK", "CN", "CP", "CX", "DT", "ED", "FT", "MO", "NM", "PN", "RP", "SN", "ST", "TM", "TN", "TS", "TX", "XAD", "XCN", "XON", "XPN", "XTN"]
+          },
+          "observation_identifier": {
+            "type": "object",
+            "required": ["identifier"],
+            "properties": {
+              "identifier": {
+                "type": "string",
+                "examples": ["WBC", "RBC", "HGB", "HCT", "PLT", "GLUC", "BUN", "CREAT", "NA", "K", "CL", "CO2", "CHOL", "TRIG", "HDL", "LDL", "TSH", "T4", "PSA", "HBA1C"]
+              },
+              "text": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observation name based on identifier"
+              },
+              "name_of_coding_system": {
+                "type": "string",
+                "enum": ["LN", "SNM", "CPT4", "LOCAL"]
+              }
+            }
+          },
+          "observation_sub_id": {"type": "string"},
+          "observation_value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic observation value based on identifier and value_type"
+          },
+          "units": {
+            "type": "string",
+            "examples": ["mg/dL", "mmHg", "bpm", "°C", "kg", "cm", "K/uL", "M/uL", "g/dL", "%", "mIU/L", "ng/mL", "pg/mL", "mEq/L", "mmol/L"]
+          },
+          "references_range": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate appropriate reference range for the observation"
+          },
+          "abnormal_flags": {
+            "type": "string",
+            "enum": ["L", "H", "LL", "HH", "N", "A", "AA", "S", "R", "I", "MS", "VS"]
+          },
+          "probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "nature_of_abnormal_test": {
+            "type": "string",
+            "enum": ["A", "D", "F", "I", "N", "O", "P", "R", "S", "U", "V", "W"]
+          },
+          "observation_result_status": {
+            "type": "string",
+            "enum": ["C", "D", "F", "I", "N", "O", "P", "R", "S", "U", "W", "X"]
+          },
+          "effective_date_of_reference_range": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "user_defined_access_checks": {"type": "string"},
+          "datetime_of_observation": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "producers_id": {"type": "string"},
+          "responsible_observer": {
+            "type": "object",
+            "properties": {
+              "id_number": {"type": "string"},
+              "family_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observer name"
+              },
+              "given_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observer given name"
+              }
+            }
+          },
+          "observation_method": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic observation method or instrument"
+          },
+          "equipment_instance_identifier": {"type": "string"},
+          "datetime_of_analysis": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          }
+        }
+      }
+    },
+    "NTE": {
+      "type": "array",
+      "title": "Notes and Comments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "set_id": {"type": "integer"},
+          "source_of_comment": {
+            "type": "string",
+            "enum": ["L", "P", "O"]
+          },
+          "comment": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic clinical note, interpretation, or technical comment"
+          },
+          "comment_type": {
+            "type": "string",
+            "examples": ["PI", "AI", "GI", "1R", "2R", "GR", "RE", "DR", "TR", "LI", "TI"]
+          }
+        }
+      }
+    }
+  }
+}

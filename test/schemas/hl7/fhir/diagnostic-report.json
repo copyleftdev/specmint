@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 FHIR DiagnosticReport Resource",
+  "description": "FHIR R4 DiagnosticReport resource for clinical test results and findings",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "effectiveDateTime <= issued",
+      "description": "Report effective time must be before or equal to issued time"
+    },
+    {
+      "rule": "if status == 'final' then result must be present",
+      "description": "Final reports must have results"
+    }
+  ],
+  "required": ["resourceType", "id", "status", "code", "subject"],
+  "properties": {
+    "resourceType": {
+      "type": "string",
+      "const": "DiagnosticReport"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9\\-\\.]{1,64}$"
+    },
+    "meta": {
+      "type": "object",
+      "properties": {
+        "versionId": {"type": "string"},
+        "lastUpdated": {"type": "string", "format": "date-time"},
+        "profile": {
+          "type": "array",
+          "items": {"type": "string", "format": "uri"}
+        }
+      }
+    },
+    "identifier": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "system": {"type": "string", "format": "uri"},
+          "value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic diagnostic report identifier"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["registered", "partial", "preliminary", "final", "amended", "corrected", "appended", "cancelled", "entered-in-error", "unknown"]
+    },
+    "category": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "coding": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "system": {
+                  "type": "string",
+                  "const": "http://terminology.hl7.org/CodeSystem/v2-0074"
+                },
+                "code": {
+                  "type": "string",
+                  "enum": ["LAB", "RAD", "CT", "NMR", "NMS", "PATH", "XRC"]
+                },
+                "display": {
+                  "type": "string",
+                  "enum": ["Laboratory", "Radiology", "Computed Tomography", "Nuclear Magnetic Resonance", "Nuclear Medicine Service", "Pathology", "X-ray Crystallography"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "required": ["coding"],
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["system", "code"],
+            "properties": {
+              "system": {
+                "type": "string",
+                "enum": [
+                  "http://loinc.org",
+                  "http://snomed.info/sct",
+                  "http://www.ama-assn.org/go/cpt"
+                ]
+              },
+              "code": {
+                "type": "string",
+                "examples": [
+                  "58410-2",
+                  "11502-2",
+                  "24323-8",
+                  "33747-0",
+                  "57698-3"
+                ]
+              },
+              "display": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate appropriate diagnostic test name based on code"
+              }
+            }
+          }
+        },
+        "text": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate human-readable diagnostic test description"
+        }
+      }
+    },
+    "subject": {
+      "type": "object",
+      "required": ["reference"],
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^Patient/[A-Za-z0-9\\-\\.]{1,64}$"
+        },
+        "display": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate patient display name"
+        }
+      }
+    },
+    "encounter": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "type": "string",
+          "pattern": "^Encounter/[A-Za-z0-9\\-\\.]{1,64}$"
+        }
+      }
+    },
+    "effectiveDateTime": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Clinically relevant time/time-period for report"
+    },
+    "issued": {
+      "type": "string",
+      "format": "date-time",
+      "description": "DateTime this version was made available"
+    },
+    "performer": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^(Practitioner|PractitionerRole|Organization)/[A-Za-z0-9\\-\\.]{1,64}$"
+          },
+          "display": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate healthcare provider or lab name"
+          }
+        }
+      }
+    },
+    "resultsInterpreter": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^(Practitioner|PractitionerRole)/[A-Za-z0-9\\-\\.]{1,64}$"
+          },
+          "display": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate interpreting physician name"
+          }
+        }
+      }
+    },
+    "specimen": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^Specimen/[A-Za-z0-9\\-\\.]{1,64}$"
+          },
+          "display": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate specimen description"
+          }
+        }
+      }
+    },
+    "result": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^Observation/[A-Za-z0-9\\-\\.]{1,64}$"
+          },
+          "display": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate observation result description"
+          }
+        }
+      }
+    },
+    "imagingStudy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "pattern": "^ImagingStudy/[A-Za-z0-9\\-\\.]{1,64}$"
+          }
+        }
+      }
+    },
+    "conclusion": {
+      "type": "string",
+      "x-llm": true,
+      "description": "llm: Generate clinical conclusion and interpretation of results"
+    },
+    "conclusionCode": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "coding": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "system": {
+                  "type": "string",
+                  "enum": [
+                    "http://snomed.info/sct",
+                    "http://hl7.org/fhir/sid/icd-10-cm"
+                  ]
+                },
+                "code": {"type": "string"},
+                "display": {
+                  "type": "string",
+                  "x-llm": true,
+                  "description": "llm: Generate diagnostic conclusion code display"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "presentedForm": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "contentType": {
+            "type": "string",
+            "enum": ["application/pdf", "text/html", "text/plain", "application/rtf"]
+          },
+          "language": {"type": "string", "default": "en-US"},
+          "data": {
+            "type": "string",
+            "format": "byte",
+            "description": "Base64 encoded report content"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URI where the report can be accessed"
+          },
+          "size": {"type": "integer", "minimum": 0},
+          "hash": {
+            "type": "string",
+            "format": "byte",
+            "description": "SHA-1 hash of the report content"
+          },
+          "title": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate report title"
+          },
+          "creation": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the report was created"
+          }
+        }
+      }
+    }
+  }
+}

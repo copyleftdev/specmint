@@ -1,0 +1,670 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 v2.x ADT^A01 - Admit/Visit Notification",
+  "description": "HL7 v2.x ADT A01 message for patient admission notifications",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "PV1.admission_datetime <= MSH.timestamp",
+      "description": "Admission time must be before or equal to message timestamp"
+    },
+    {
+      "rule": "PID.birth_date <= PV1.admission_datetime",
+      "description": "Patient birth date must be before admission"
+    }
+  ],
+  "required": ["MSH", "EVN", "PID", "PV1"],
+  "properties": {
+    "MSH": {
+      "type": "object",
+      "title": "Message Header",
+      "required": ["field_separator", "encoding_characters", "sending_application", "sending_facility", "receiving_application", "receiving_facility", "timestamp", "message_type", "message_control_id", "processing_id", "version_id"],
+      "properties": {
+        "field_separator": {"type": "string", "const": "|"},
+        "encoding_characters": {"type": "string", "const": "^~\\&"},
+        "sending_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic hospital information system name"
+        },
+        "sending_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic hospital or facility name"
+        },
+        "receiving_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving system name"
+        },
+        "receiving_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving facility name"
+        },
+        "timestamp": {
+          "type": "string",
+          "pattern": "^\\d{14}$",
+          "description": "YYYYMMDDHHMMSS format"
+        },
+        "message_type": {
+          "type": "object",
+          "properties": {
+            "message_code": {"type": "string", "const": "ADT"},
+            "trigger_event": {"type": "string", "const": "A01"},
+            "message_structure": {"type": "string", "const": "ADT_A01"}
+          }
+        },
+        "message_control_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "processing_id": {
+          "type": "string",
+          "enum": ["P", "T", "D"],
+          "description": "P=Production, T=Training, D=Debugging"
+        },
+        "version_id": {
+          "type": "string",
+          "enum": ["2.3", "2.4", "2.5", "2.6", "2.7", "2.8"]
+        }
+      }
+    },
+    "EVN": {
+      "type": "object",
+      "title": "Event Type",
+      "required": ["event_type_code"],
+      "properties": {
+        "event_type_code": {"type": "string", "const": "A01"},
+        "recorded_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "datetime_planned_event": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "event_reason_code": {
+          "type": "string",
+          "examples": ["01", "02", "03"]
+        },
+        "operator_id": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic operator/user ID"
+        }
+      }
+    },
+    "PID": {
+      "type": "object",
+      "title": "Patient Identification",
+      "required": ["patient_id", "patient_name", "birth_date", "sex"],
+      "properties": {
+        "set_id": {"type": "integer", "const": 1},
+        "patient_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "patient_identifier_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id_number": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic medical record number"
+              },
+              "check_digit": {"type": "string"},
+              "check_digit_scheme": {"type": "string"},
+              "assigning_authority": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic assigning authority"
+              },
+              "identifier_type_code": {
+                "type": "string",
+                "enum": ["MR", "SS", "DL", "PPN", "BR", "MC"]
+              }
+            }
+          }
+        },
+        "patient_name": {
+          "type": "object",
+          "properties": {
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic family name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic given name"
+            },
+            "middle_initial": {"type": "string", "maxLength": 1},
+            "suffix": {
+              "type": "string",
+              "examples": ["Jr", "Sr", "III", "IV"]
+            },
+            "prefix": {
+              "type": "string",
+              "examples": ["Dr", "Mr", "Mrs", "Ms"]
+            },
+            "name_type_code": {
+              "type": "string",
+              "enum": ["L", "A", "B", "C", "M", "O", "P", "S"]
+            }
+          }
+        },
+        "birth_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$",
+          "description": "YYYYMMDD format"
+        },
+        "sex": {
+          "type": "string",
+          "enum": ["M", "F", "O", "U", "A", "N"]
+        },
+        "race": {
+          "type": "string",
+          "examples": ["1002-5", "2028-9", "2054-5", "2076-8", "2106-3"]
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "street_address": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic street address"
+            },
+            "other_designation": {"type": "string"},
+            "city": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic city name"
+            },
+            "state_or_province": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "zip_or_postal_code": {
+              "type": "string",
+              "pattern": "^\\d{5}(-\\d{4})?$"
+            },
+            "country": {"type": "string", "default": "USA"},
+            "address_type": {
+              "type": "string",
+              "enum": ["B", "C", "H", "M", "O", "P"]
+            }
+          }
+        },
+        "phone_number_home": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        },
+        "phone_number_business": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        },
+        "primary_language": {
+          "type": "string",
+          "examples": ["EN", "ES", "FR", "DE", "ZH"]
+        },
+        "marital_status": {
+          "type": "string",
+          "enum": ["A", "D", "M", "S", "W", "C", "G", "P", "R", "E", "N", "I", "B", "U", "O", "T"]
+        },
+        "religion": {
+          "type": "string",
+          "examples": ["AGN", "ATH", "BAH", "BUD", "CHR", "CNF", "HIN", "JEW", "MOS", "OTH"]
+        },
+        "ssn": {
+          "type": "string",
+          "pattern": "^\\d{9}$"
+        }
+      }
+    },
+    "PV1": {
+      "type": "object",
+      "title": "Patient Visit",
+      "required": ["patient_class", "admission_datetime"],
+      "properties": {
+        "set_id": {"type": "integer", "const": 1},
+        "patient_class": {
+          "type": "string",
+          "enum": ["E", "I", "O", "P", "R", "B", "C", "N"]
+        },
+        "assigned_patient_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic unit or ward name"
+            },
+            "room": {
+              "type": "string",
+              "pattern": "^[A-Z0-9]{1,10}$"
+            },
+            "bed": {
+              "type": "string",
+              "pattern": "^[A-Z0-9]{1,10}$"
+            },
+            "facility": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic facility identifier"
+            },
+            "location_status": {
+              "type": "string",
+              "enum": ["A", "I", "K", "O", "U"]
+            },
+            "person_location_type": {
+              "type": "string",
+              "enum": ["B", "C", "D", "E", "L", "N", "O", "R", "S"]
+            },
+            "building": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic building identifier"
+            },
+            "floor": {"type": "string"}
+          }
+        },
+        "admission_type": {
+          "type": "string",
+          "enum": ["A", "C", "E", "L", "N", "R", "U"]
+        },
+        "preadmit_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "prior_patient_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {"type": "string"},
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "attending_doctor": {
+          "type": "object",
+          "properties": {
+            "id_number": {
+              "type": "string",
+              "pattern": "^[A-Z0-9]{1,20}$"
+            },
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic physician family name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic physician given name"
+            },
+            "middle_initial": {"type": "string"},
+            "suffix": {"type": "string"},
+            "prefix": {"type": "string", "default": "Dr"},
+            "degree": {
+              "type": "string",
+              "examples": ["MD", "DO", "NP", "PA"]
+            }
+          }
+        },
+        "referring_doctor": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic referring physician name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic referring physician given name"
+            }
+          }
+        },
+        "hospital_service": {
+          "type": "string",
+          "enum": ["CAR", "MED", "PUL", "SUR", "URO", "ORT", "NEU", "ONC", "PED", "OBS", "GYN", "PSY", "RAD", "EMR"]
+        },
+        "temporary_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {"type": "string"},
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "preadmit_test_indicator": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "readmission_indicator": {
+          "type": "string",
+          "enum": ["R"]
+        },
+        "admission_source": {
+          "type": "string",
+          "enum": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G", "H", "J", "K", "L", "M", "N", "P", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
+        },
+        "ambulatory_status": {
+          "type": "string",
+          "enum": ["A0", "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "B1", "B2", "B3", "B4", "B5", "B6"]
+        },
+        "vip_indicator": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "admitting_doctor": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic admitting physician name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic admitting physician given name"
+            }
+          }
+        },
+        "patient_type": {
+          "type": "string",
+          "enum": ["B", "C", "E", "I", "N", "O", "P", "R", "S", "U"]
+        },
+        "visit_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "financial_class": {
+          "type": "string",
+          "examples": ["SELF", "COMM", "MED", "MCAL", "WORK", "CHAR", "GOVT"]
+        },
+        "charge_price_indicator": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "courtesy_code": {
+          "type": "string",
+          "enum": ["C", "P", "S", "V"]
+        },
+        "credit_rating": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E"]
+        },
+        "contract_code": {
+          "type": "string",
+          "examples": ["STANDARD", "PREFERRED", "VIP"]
+        },
+        "contract_effective_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "contract_amount": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "contract_period": {"type": "integer"},
+        "interest_code": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "transfer_to_bad_debt_code": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "transfer_to_bad_debt_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "bad_debt_agency_code": {"type": "string"},
+        "bad_debt_transfer_amount": {"type": "number"},
+        "bad_debt_recovery_amount": {"type": "number"},
+        "delete_account_indicator": {
+          "type": "string",
+          "enum": ["Y", "N"]
+        },
+        "delete_account_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "discharge_disposition": {
+          "type": "string",
+          "enum": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "30", "40", "41", "42", "43", "50", "51", "61", "62", "63", "64", "65", "66", "69", "70", "71", "72", "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", "91", "92", "93", "94", "95"]
+        },
+        "discharged_to_location": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic discharge location"
+        },
+        "diet_type": {
+          "type": "string",
+          "examples": ["REG", "NPO", "SOFT", "LIQUID", "DIABETIC", "LOW_SODIUM", "CARDIAC"]
+        },
+        "servicing_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic servicing facility name"
+        },
+        "bed_status": {
+          "type": "string",
+          "enum": ["C", "H", "O", "U", "K", "I"]
+        },
+        "account_status": {
+          "type": "string",
+          "enum": ["A", "I", "P"]
+        },
+        "pending_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {"type": "string"},
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "prior_temporary_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {"type": "string"},
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "admit_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$",
+          "description": "YYYYMMDDHHMMSS format"
+        },
+        "discharge_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "current_patient_balance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "total_charges": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "total_adjustments": {"type": "number"},
+        "total_payments": {"type": "number"},
+        "alternate_visit_id": {"type": "string"},
+        "visit_indicator": {
+          "type": "string",
+          "enum": ["A", "V"]
+        }
+      }
+    },
+    "OBX": {
+      "type": "array",
+      "title": "Observation/Result",
+      "items": {
+        "type": "object",
+        "properties": {
+          "set_id": {"type": "integer"},
+          "value_type": {
+            "type": "string",
+            "enum": ["AD", "CE", "CF", "CK", "CN", "CP", "CX", "DT", "ED", "FT", "MO", "NM", "PN", "RP", "SN", "ST", "TM", "TN", "TS", "TX", "XAD", "XCN", "XON", "XPN", "XTN"]
+          },
+          "observation_identifier": {
+            "type": "object",
+            "properties": {
+              "identifier": {"type": "string"},
+              "text": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observation name"
+              },
+              "name_of_coding_system": {
+                "type": "string",
+                "enum": ["LN", "SNM", "CPT4"]
+              }
+            }
+          },
+          "observation_sub_id": {"type": "string"},
+          "observation_value": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic observation value based on identifier"
+          },
+          "units": {
+            "type": "string",
+            "examples": ["mg/dL", "mmHg", "bpm", "°C", "kg", "cm"]
+          },
+          "references_range": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate appropriate reference range"
+          },
+          "abnormal_flags": {
+            "type": "string",
+            "enum": ["L", "H", "LL", "HH", "N", "A", "AA", "S", "R", "I", "MS", "VS"]
+          },
+          "probability": {"type": "number", "minimum": 0, "maximum": 1},
+          "nature_of_abnormal_test": {
+            "type": "string",
+            "enum": ["A", "D", "F", "I", "N", "O", "P", "R", "S", "U", "V", "W"]
+          },
+          "observation_result_status": {
+            "type": "string",
+            "enum": ["C", "D", "F", "I", "N", "O", "P", "R", "S", "U", "W", "X"]
+          },
+          "effective_date_of_reference_range": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "user_defined_access_checks": {"type": "string"},
+          "datetime_of_observation": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "producers_id": {"type": "string"},
+          "responsible_observer": {
+            "type": "object",
+            "properties": {
+              "id_number": {"type": "string"},
+              "family_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observer name"
+              },
+              "given_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic observer given name"
+              }
+            }
+          },
+          "observation_method": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic observation method"
+          }
+        }
+      }
+    },
+    "DG1": {
+      "type": "array",
+      "title": "Diagnosis",
+      "items": {
+        "type": "object",
+        "properties": {
+          "set_id": {"type": "integer"},
+          "diagnosis_coding_method": {
+            "type": "string",
+            "enum": ["I9", "I10", "SNM"]
+          },
+          "diagnosis_code": {
+            "type": "string",
+            "examples": ["I10", "E11.9", "Z51.11", "M79.3", "R06.02"]
+          },
+          "diagnosis_description": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic diagnosis description based on code"
+          },
+          "diagnosis_datetime": {
+            "type": "string",
+            "pattern": "^\\d{14}$"
+          },
+          "diagnosis_type": {
+            "type": "string",
+            "enum": ["A", "W", "F"]
+          },
+          "major_diagnostic_category": {"type": "string"},
+          "diagnostic_related_group": {"type": "string"},
+          "drg_approval_indicator": {
+            "type": "string",
+            "enum": ["Y", "N"]
+          },
+          "drg_grouper_review_code": {"type": "string"},
+          "outlier_type": {
+            "type": "string",
+            "enum": ["C", "D", "E"]
+          },
+          "outlier_days": {"type": "integer"},
+          "outlier_cost": {"type": "number"},
+          "grouper_version_and_type": {"type": "string"},
+          "diagnosis_priority": {"type": "integer"},
+          "diagnosing_clinician": {
+            "type": "object",
+            "properties": {
+              "id_number": {"type": "string"},
+              "family_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic diagnosing clinician name"
+              },
+              "given_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic diagnosing clinician given name"
+              }
+            }
+          },
+          "diagnosis_classification": {
+            "type": "string",
+            "enum": ["C", "D", "M", "P", "R", "T"]
+          },
+          "confidential_indicator": {
+            "type": "string",
+            "enum": ["Y", "N"]
+          }
+        }
+      }
+    }
+  }
+}

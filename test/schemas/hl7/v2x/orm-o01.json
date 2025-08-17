@@ -1,0 +1,684 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HL7 v2.x ORM^O01 - Order Message",
+  "description": "HL7 v2.x ORM O01 message for general order entry",
+  "type": "object",
+  "x-cross-field-rules": [
+    {
+      "rule": "ORC.order_datetime <= MSH.timestamp",
+      "description": "Order time must be before or equal to message timestamp"
+    },
+    {
+      "rule": "if ORC.order_status == 'CA' then ORC.response_flag must be present",
+      "description": "Cancelled orders must have response flag"
+    }
+  ],
+  "required": ["MSH", "PID", "ORC", "OBR"],
+  "properties": {
+    "MSH": {
+      "type": "object",
+      "title": "Message Header",
+      "required": ["field_separator", "encoding_characters", "sending_application", "sending_facility", "receiving_application", "receiving_facility", "timestamp", "message_type", "message_control_id", "processing_id", "version_id"],
+      "properties": {
+        "field_separator": {"type": "string", "const": "|"},
+        "encoding_characters": {"type": "string", "const": "^~\\&"},
+        "sending_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic ordering system name"
+        },
+        "sending_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic ordering facility name"
+        },
+        "receiving_application": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving system name"
+        },
+        "receiving_facility": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic receiving facility name"
+        },
+        "timestamp": {
+          "type": "string",
+          "pattern": "^\\d{14}$",
+          "description": "YYYYMMDDHHMMSS format"
+        },
+        "message_type": {
+          "type": "object",
+          "properties": {
+            "message_code": {"type": "string", "const": "ORM"},
+            "trigger_event": {"type": "string", "const": "O01"},
+            "message_structure": {"type": "string", "const": "ORM_O01"}
+          }
+        },
+        "message_control_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "processing_id": {
+          "type": "string",
+          "enum": ["P", "T", "D"]
+        },
+        "version_id": {
+          "type": "string",
+          "enum": ["2.3", "2.4", "2.5", "2.6", "2.7", "2.8"]
+        }
+      }
+    },
+    "PID": {
+      "type": "object",
+      "title": "Patient Identification",
+      "required": ["patient_id", "patient_name", "birth_date", "sex"],
+      "properties": {
+        "set_id": {"type": "integer", "const": 1},
+        "patient_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,20}$"
+        },
+        "patient_identifier_list": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id_number": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic medical record number"
+              },
+              "assigning_authority": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic assigning authority"
+              },
+              "identifier_type_code": {
+                "type": "string",
+                "enum": ["MR", "SS", "DL", "PPN", "BR", "MC"]
+              }
+            }
+          }
+        },
+        "patient_name": {
+          "type": "object",
+          "properties": {
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic family name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic given name"
+            },
+            "middle_initial": {"type": "string", "maxLength": 1},
+            "suffix": {"type": "string"},
+            "prefix": {"type": "string"},
+            "name_type_code": {"type": "string", "enum": ["L", "A", "B", "C", "M"]}
+          }
+        },
+        "birth_date": {
+          "type": "string",
+          "pattern": "^\\d{8}$"
+        },
+        "sex": {
+          "type": "string",
+          "enum": ["M", "F", "O", "U"]
+        },
+        "address": {
+          "type": "object",
+          "properties": {
+            "street_address": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic street address"
+            },
+            "city": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic city name"
+            },
+            "state_or_province": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "zip_or_postal_code": {
+              "type": "string",
+              "pattern": "^\\d{5}(-\\d{4})?$"
+            }
+          }
+        },
+        "phone_number_home": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        }
+      }
+    },
+    "PV1": {
+      "type": "object",
+      "title": "Patient Visit",
+      "properties": {
+        "set_id": {"type": "integer", "const": 1},
+        "patient_class": {
+          "type": "string",
+          "enum": ["E", "I", "O", "P", "R"]
+        },
+        "assigned_patient_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic unit name"
+            },
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "attending_doctor": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic physician name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic physician given name"
+            },
+            "prefix": {"type": "string", "default": "Dr"}
+          }
+        }
+      }
+    },
+    "ORC": {
+      "type": "object",
+      "title": "Common Order",
+      "required": ["order_control", "placer_order_number"],
+      "properties": {
+        "order_control": {
+          "type": "string",
+          "enum": ["NW", "OK", "UA", "CA", "OC", "CR", "DC", "DE", "DF", "DR", "FU", "HD", "HR", "LI", "NA", "NF", "OD", "OF", "OH", "OK", "OP", "OR", "PA", "PR", "RE", "RL", "RO", "RP", "RQ", "RR", "RU", "SC", "SN", "SR", "SS", "UA", "UC", "UD", "UF", "UH", "UM", "UN", "UP", "UR", "UX", "XO", "XR"]
+        },
+        "placer_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "filler_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "placer_group_number": {"type": "string"},
+        "order_status": {
+          "type": "string",
+          "enum": ["A", "CA", "CM", "DC", "ER", "HD", "IP", "RP", "SC"]
+        },
+        "response_flag": {
+          "type": "string",
+          "enum": ["E", "R", "D", "F", "N"]
+        },
+        "quantity_timing": {
+          "type": "object",
+          "properties": {
+            "quantity": {"type": "integer", "minimum": 1},
+            "interval": {"type": "string"},
+            "duration": {"type": "string"},
+            "start_datetime": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            },
+            "end_datetime": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            },
+            "priority": {
+              "type": "string",
+              "enum": ["S", "A", "R", "P", "C", "T"]
+            }
+          }
+        },
+        "parent_order": {"type": "string"},
+        "datetime_of_transaction": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "entered_by": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider given name"
+            }
+          }
+        },
+        "verified_by": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic verifying provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic verifying provider given name"
+            }
+          }
+        },
+        "ordering_provider": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider given name"
+            },
+            "prefix": {"type": "string", "default": "Dr"}
+          }
+        },
+        "enterers_location": {
+          "type": "object",
+          "properties": {
+            "point_of_care": {"type": "string"},
+            "room": {"type": "string"},
+            "bed": {"type": "string"}
+          }
+        },
+        "call_back_phone_number": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        },
+        "order_effective_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "order_control_code_reason": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic order control reason"
+        },
+        "entering_organization": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic organization name"
+        },
+        "entering_device": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic device identifier"
+        },
+        "action_by": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic action provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic action provider given name"
+            }
+          }
+        }
+      }
+    },
+    "OBR": {
+      "type": "object",
+      "title": "Observation Request",
+      "required": ["set_id", "universal_service_identifier"],
+      "properties": {
+        "set_id": {"type": "integer"},
+        "placer_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "filler_order_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{1,22}$"
+        },
+        "universal_service_identifier": {
+          "type": "object",
+          "required": ["identifier"],
+          "properties": {
+            "identifier": {
+              "type": "string",
+              "examples": ["CBC", "CMP", "LIPID", "TSH", "PSA", "HBA1C", "PT", "PTT", "INR", "UA"]
+            },
+            "text": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic lab test name based on identifier"
+            },
+            "name_of_coding_system": {
+              "type": "string",
+              "enum": ["LN", "CPT4", "SNM", "LOCAL"]
+            },
+            "alternate_identifier": {"type": "string"},
+            "alternate_text": {"type": "string"},
+            "name_of_alternate_coding_system": {"type": "string"}
+          }
+        },
+        "priority": {
+          "type": "string",
+          "enum": ["S", "A", "R", "P", "C", "T"]
+        },
+        "requested_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "observation_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "observation_end_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "collection_volume": {
+          "type": "object",
+          "properties": {
+            "quantity": {"type": "number"},
+            "units": {"type": "string", "examples": ["mL", "L", "cc"]}
+          }
+        },
+        "collector_identifier": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic collector name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic collector given name"
+            }
+          }
+        },
+        "specimen_action_code": {
+          "type": "string",
+          "enum": ["A", "G", "L", "O", "P", "R", "S"]
+        },
+        "danger_code": {
+          "type": "string",
+          "examples": ["BHZ", "BIO", "COR", "ESC", "EXP", "IFL", "INF", "INJ", "RAD"]
+        },
+        "relevant_clinical_information": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate relevant clinical context for the order"
+        },
+        "specimen_received_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "specimen_source": {
+          "type": "object",
+          "properties": {
+            "specimen_name": {
+              "type": "string",
+              "examples": ["BLOOD", "URINE", "SERUM", "PLASMA", "CSF", "SPUTUM", "STOOL", "TISSUE"]
+            },
+            "additives": {"type": "string"},
+            "specimen_collection_method": {
+              "type": "string",
+              "examples": ["VENIPUNCTURE", "FINGERSTICK", "HEELSTICK", "ARTERIAL", "CATHETER"]
+            },
+            "body_site": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic anatomical collection site"
+            },
+            "site_modifier": {"type": "string"},
+            "collection_method_modifier_code": {"type": "string"},
+            "specimen_role": {
+              "type": "string",
+              "enum": ["B", "C", "F", "G", "L", "O", "P", "Q", "R", "S", "V"]
+            }
+          }
+        },
+        "ordering_provider": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic ordering provider given name"
+            },
+            "prefix": {"type": "string", "default": "Dr"}
+          }
+        },
+        "order_callback_phone_number": {
+          "type": "string",
+          "pattern": "^\\d{10}$"
+        },
+        "placer_field_1": {"type": "string"},
+        "placer_field_2": {"type": "string"},
+        "filler_field_1": {"type": "string"},
+        "filler_field_2": {"type": "string"},
+        "results_rpt_status_change_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "charge_to_practice": {
+          "type": "object",
+          "properties": {
+            "dollar_amount": {"type": "number", "minimum": 0},
+            "charge_code": {"type": "string"}
+          }
+        },
+        "diagnostic_serv_sect_id": {
+          "type": "string",
+          "enum": ["AU", "BG", "BLB", "CUS", "CTH", "CT", "CH", "CP", "EC", "EN", "GE", "HM", "ICU", "IMM", "LAB", "MB", "MCB", "MYC", "NMR", "NMS", "NRS", "OSL", "OT", "OTH", "OUS", "PHR", "PHY", "PT", "RAD", "RC", "RT", "RX", "SP", "SR", "TX", "VUS", "VR", "XRC"]
+        },
+        "result_status": {
+          "type": "string",
+          "enum": ["O", "P", "F", "C", "A", "I", "S", "X", "Y", "Z"]
+        },
+        "parent_result": {
+          "type": "object",
+          "properties": {
+            "placer_assigned_identifier": {"type": "string"},
+            "filler_assigned_identifier": {"type": "string"}
+          }
+        },
+        "quantity_timing": {
+          "type": "object",
+          "properties": {
+            "quantity": {"type": "integer"},
+            "interval": {"type": "string"},
+            "duration": {"type": "string"},
+            "start_datetime": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            },
+            "end_datetime": {
+              "type": "string",
+              "pattern": "^\\d{14}$"
+            }
+          }
+        },
+        "result_copies_to": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id_number": {"type": "string"},
+              "family_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic provider name for result copy"
+              },
+              "given_name": {
+                "type": "string",
+                "x-llm": true,
+                "description": "llm: Generate realistic provider given name for result copy"
+              }
+            }
+          }
+        },
+        "parent_number": {"type": "string"},
+        "transportation_mode": {
+          "type": "string",
+          "enum": ["CART", "PORT", "WALK", "PTS", "TUBE", "A", "C", "F", "N", "S", "R"]
+        },
+        "reason_for_study": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic clinical reason for ordering the study"
+        },
+        "principal_result_interpreter": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic interpreting provider name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic interpreting provider given name"
+            }
+          }
+        },
+        "assistant_result_interpreter": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic assistant interpreter name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic assistant interpreter given name"
+            }
+          }
+        },
+        "technician": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic technician name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic technician given name"
+            }
+          }
+        },
+        "transcriptionist": {
+          "type": "object",
+          "properties": {
+            "id_number": {"type": "string"},
+            "family_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic transcriptionist name"
+            },
+            "given_name": {
+              "type": "string",
+              "x-llm": true,
+              "description": "llm: Generate realistic transcriptionist given name"
+            }
+          }
+        },
+        "scheduled_datetime": {
+          "type": "string",
+          "pattern": "^\\d{14}$"
+        },
+        "number_of_sample_containers": {"type": "integer"},
+        "transport_logistics_of_collected_sample": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic transport logistics description"
+        },
+        "collectors_comment": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic collector comment"
+        },
+        "transport_arrangement_responsibility": {
+          "type": "string",
+          "enum": ["A", "R", "S"]
+        },
+        "transport_arranged": {
+          "type": "string",
+          "enum": ["A", "N", "U"]
+        },
+        "escort_required": {
+          "type": "string",
+          "enum": ["R", "N", "U"]
+        },
+        "planned_patient_transport_comment": {
+          "type": "string",
+          "x-llm": true,
+          "description": "llm: Generate realistic transport comment"
+        }
+      }
+    },
+    "NTE": {
+      "type": "array",
+      "title": "Notes and Comments",
+      "items": {
+        "type": "object",
+        "properties": {
+          "set_id": {"type": "integer"},
+          "source_of_comment": {
+            "type": "string",
+            "enum": ["L", "P", "O"]
+          },
+          "comment": {
+            "type": "string",
+            "x-llm": true,
+            "description": "llm: Generate realistic clinical note or comment"
+          },
+          "comment_type": {
+            "type": "string",
+            "examples": ["PI", "AI", "GI", "1R", "2R", "GR", "RE", "DR", "TR"]
+          }
+        }
+      }
+    }
+  }
+}
