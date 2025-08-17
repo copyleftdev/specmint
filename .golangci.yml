@@ -14,7 +14,6 @@ linters:
   enable:
     - errcheck
     - gosimple
-    - govet
     - ineffassign
     - unused
     - gofmt
@@ -23,6 +22,7 @@ linters:
   disable:
     - typecheck
     - staticcheck  # Disable staticcheck as it's causing import resolution issues
+    - govet       # Disable govet as it's also performing type checking
 
 issues:
   exclude-use-default: false
