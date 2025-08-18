@@ -14,12 +14,30 @@
 [![GitHub stars](https://img.shields.io/github/stars/copyleftdev/specmint.svg)](https://github.com/copyleftdev/specmint/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/copyleftdev/specmint.svg)](https://github.com/copyleftdev/specmint/issues)
 
-**SpecMint** is a production-ready synthetic dataset generator that creates realistic, schema-compliant datasets with optional LLM enrichment. Built for privacy-conscious data generation, testing, and development workflows.
+**SpecMint** is an intelligent synthetic dataset generator that transforms business scenarios into realistic datasets. Instead of manually configuring schemas and record counts, simply describe your business context (e.g., "500-bed hospital", "community bank with 12 branches") and SpecMint automatically calculates realistic record counts, relationships, and generates comprehensive datasets.
 
-## 🚀 Quick Start
+## 🎯 Population-Based Intelligence
+
+SpecMint's breakthrough feature is **population-based simulation** - analyze real-world business scenarios and automatically generate realistic datasets:
 
 ```bash
-# Generate 1000 e-commerce products
+# Hospital simulation - automatically calculates patients, claims, prescriptions, etc.
+./bin/specmint simulate --population "100-bed regional hospital" --execute --output ./hospital-data
+
+# Banking simulation - generates customers, accounts, transactions, loans
+./bin/specmint simulate --population "community bank with 5 branches" --execute --output ./bank-data
+
+# E-commerce simulation - creates users, products, orders, reviews
+./bin/specmint simulate --population "e-commerce platform with 50K users" --execute --output ./ecommerce-data
+
+# Retail simulation - generates stores, products, customers, inventory
+./bin/specmint simulate --population "retail chain with 10 stores" --execute --output ./retail-data
+```
+
+## 🚀 Traditional Schema-Based Generation
+
+```bash
+# Generate specific record types with custom counts
 ./bin/specmint generate -s test/schemas/ecommerce/products.json -o output -c 1000
 
 # Generate healthcare claims with LLM enrichment
@@ -65,8 +83,9 @@ SpecMint follows a clean, modular architecture designed for maintainability and 
 
 ### Core Components
 
-- **`cmd/specmint/`** - CLI interface with 5 commands (generate, validate, inspect, doctor, benchmark)
+- **`cmd/specmint/`** - CLI interface with 6 commands (generate, simulate, validate, inspect, doctor, benchmark)
 - **`pkg/generator/`** - Deterministic generation engine with optional LLM enrichment
+- **`pkg/population/`** - Population-based simulation and business scenario analysis
 - **`pkg/schema/`** - JSON Schema parsing and validation
 - **`pkg/llm/`** - Local Ollama integration for realistic data enhancement
 - **`pkg/validator/`** - Domain-specific business rule validation
@@ -181,6 +200,12 @@ SpecMint maintains an **A-grade security rating** with:
 See [SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md) for detailed security assessment.
 
 ## 🎯 Key Features
+
+### Population-Based Intelligence
+- **Business Context Understanding**: Analyze real-world scenarios and suggest realistic data volumes
+- **Automatic Scaling**: Calculate appropriate record counts based on business size
+- **Domain Templates**: Built-in knowledge for Healthcare, Banking, Retail, E-commerce, Insurance
+- **Relationship Modeling**: Understand data dependencies and realistic proportions
 
 ### Deterministic Generation
 - **Reproducible**: Same seed produces identical datasets

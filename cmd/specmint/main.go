@@ -66,6 +66,7 @@ seeded generation and optional LLM enrichment via local Ollama or cloud provider
 		newInspectCmd(),
 		newDoctorCmd(),
 		newBenchmarkCmd(),
+		newSimulateCmd(),
 	)
 
 	if err := rootCmd.ExecuteContext(ctx); err != nil {
