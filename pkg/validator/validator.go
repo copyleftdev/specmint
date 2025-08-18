@@ -289,9 +289,9 @@ func (v *Validator) validateComparison(data map[string]interface{}, fields []str
 
 	// Parse constraint to extract left side, operator, and right side
 	constraint = strings.TrimSpace(constraint)
-	
+
 	var leftSide, operator, rightSide string
-	
+
 	// Find the operator
 	if strings.Contains(constraint, ">=") {
 		parts := strings.Split(constraint, ">=")
@@ -328,13 +328,13 @@ func (v *Validator) validateComparison(data map[string]interface{}, fields []str
 	} else {
 		return fmt.Errorf("unsupported comparison operator in constraint: %s", constraint)
 	}
-	
+
 	// Evaluate left side
 	leftValue := v.evaluateExpression(data, leftSide)
-	
+
 	// Evaluate right side
 	rightValue := v.evaluateExpression(data, rightSide)
-	
+
 	// Apply comparison
 	switch operator {
 	case ">=":
@@ -361,12 +361,12 @@ func (v *Validator) validateComparison(data map[string]interface{}, fields []str
 // evaluateExpression evaluates a mathematical expression with field references
 func (v *Validator) evaluateExpression(data map[string]interface{}, expr string) float64 {
 	expr = strings.TrimSpace(expr)
-	
+
 	// Handle simple field reference
 	if !strings.Contains(expr, "+") && !strings.Contains(expr, "-") && !strings.Contains(expr, "*") && !strings.Contains(expr, "/") {
 		return v.getNumericValue(data, expr)
 	}
-	
+
 	// Handle addition (most common case for medical constraints)
 	if strings.Contains(expr, "+") {
 		parts := strings.Split(expr, "+")
@@ -377,7 +377,7 @@ func (v *Validator) evaluateExpression(data map[string]interface{}, expr string)
 		}
 		return result
 	}
-	
+
 	// Handle subtraction
 	if strings.Contains(expr, "-") {
 		parts := strings.Split(expr, "-")
@@ -387,7 +387,7 @@ func (v *Validator) evaluateExpression(data map[string]interface{}, expr string)
 			return v.getNumericValue(data, left) - v.getNumericValue(data, right)
 		}
 	}
-	
+
 	// Handle multiplication
 	if strings.Contains(expr, "*") {
 		parts := strings.Split(expr, "*")
@@ -397,7 +397,7 @@ func (v *Validator) evaluateExpression(data map[string]interface{}, expr string)
 			return v.getNumericValue(data, left) * v.getNumericValue(data, right)
 		}
 	}
-	
+
 	// Fallback: treat as field name
 	return v.getNumericValue(data, expr)
 }

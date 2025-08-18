@@ -96,6 +96,32 @@ func TestPatternGeneration_PropertyBased(t *testing.T) {
 			pattern: "^[0-9]{5}(-[0-9]{4})?$",
 			regex:   regexp.MustCompile("^[0-9]{5}(-[0-9]{4})?$"),
 		},
+		// Test healthcare claims 837 patterns
+		{
+			name:    "claim_control_number",
+			pattern: "^CLM[0-9]{10}$",
+			regex:   regexp.MustCompile(`^CLM[0-9]{10}$`),
+		},
+		{
+			name:    "federal_tax_id",
+			pattern: "^[0-9]{2}-[0-9]{7}$",
+			regex:   regexp.MustCompile(`^[0-9]{2}-[0-9]{7}$`),
+		},
+		{
+			name:    "icd10_diagnosis_code",
+			pattern: "^[A-Z][0-9]{2}\\.[0-9A-Z]{1,4}$",
+			regex:   regexp.MustCompile(`^[A-Z][0-9]{2}\.[0-9A-Z]{1,4}$`),
+		},
+		{
+			name:    "insurance_member_id",
+			pattern: "^[A-Z0-9]{8,15}$",
+			regex:   regexp.MustCompile(`^[A-Z0-9]{8,15}$`),
+		},
+		{
+			name:    "payer_id",
+			pattern: "^[A-Z0-9]{5,10}$",
+			regex:   regexp.MustCompile(`^[A-Z0-9]{5,10}$`),
+		},
 		// Medical/Pharmacy patterns
 		{
 			name:    "Medical_Prescription_Number",
@@ -148,14 +174,14 @@ func TestPatternGeneration_PropertyBased(t *testing.T) {
 			// Test with multiple seeds to ensure consistency across different inputs
 			for seed := int64(1); seed <= 100; seed++ {
 				rng := rand.New(rand.NewSource(seed))
-				
+
 				generated, err := generator.generateFromPattern(tc.pattern, rng)
 				if err != nil {
 					t.Fatalf("Failed to generate pattern for %s: %v", tc.pattern, err)
 				}
 
 				if !tc.regex.MatchString(generated) {
-					t.Errorf("Generated value '%s' does not match pattern '%s' (seed: %d)", 
+					t.Errorf("Generated value '%s' does not match pattern '%s' (seed: %d)",
 						generated, tc.pattern, seed)
 				}
 
@@ -210,7 +236,7 @@ func TestPatternGeneration_EdgeCases(t *testing.T) {
 			}
 
 			if tc.regex != nil && !tc.regex.MatchString(generated) {
-				t.Errorf("Generated value '%s' does not match expected regex for pattern '%s'", 
+				t.Errorf("Generated value '%s' does not match expected regex for pattern '%s'",
 					generated, tc.pattern)
 			}
 
@@ -226,10 +252,10 @@ func TestPatternGeneration_EdgeCases(t *testing.T) {
 func TestPatternGeneration_Performance(t *testing.T) {
 	generator := NewDeterministicGenerator(12345)
 	pattern := "^[A-Z]{2}[0-9]{6}$" // SKU pattern
-	
+
 	start := time.Now()
 	iterations := 10000
-	
+
 	for i := 0; i < iterations; i++ {
 		rng := rand.New(rand.NewSource(int64(i)))
 		_, err := generator.generateFromPattern(pattern, rng)
@@ -237,15 +263,15 @@ func TestPatternGeneration_Performance(t *testing.T) {
 			t.Fatalf("Pattern generation failed at iteration %d: %v", i, err)
 		}
 	}
-	
+
 	duration := time.Since(start)
 	avgDuration := duration / time.Duration(iterations)
-	
+
 	// Performance requirement: should generate patterns in < 1ms on average
 	if avgDuration > time.Millisecond {
 		t.Errorf("Pattern generation too slow: average %v per generation (expected < 1ms)", avgDuration)
 	}
-	
+
 	t.Logf("Generated %d patterns in %v (avg: %v per pattern)", iterations, duration, avgDuration)
 }
 
@@ -253,15 +279,15 @@ func TestPatternGeneration_Performance(t *testing.T) {
 func BenchmarkPatternGeneration(b *testing.B) {
 	generator := NewDeterministicGenerator(12345)
 	patterns := []string{
-		"^[A-Z]{2}[0-9]{6}$",      // SKU
-		"^PRD[0-9]{8}$",           // Product ID
-		"^WH[0-9]{3}$",            // Warehouse
-		"^[0-9]{10}$",             // Account number
+		"^[A-Z]{2}[0-9]{6}$",           // SKU
+		"^PRD[0-9]{8}$",                // Product ID
+		"^WH[0-9]{3}$",                 // Warehouse
+		"^[0-9]{10}$",                  // Account number
 		"^[A-Z][0-9]{2}\\.[0-9]{1,2}$", // ICD-10
 	}
-	
+
 	b.ResetTimer()
-	
+
 	for i := 0; i < b.N; i++ {
 		pattern := patterns[i%len(patterns)]
 		rng := rand.New(rand.NewSource(int64(i)))

@@ -335,7 +335,7 @@ func (g *DeterministicGenerator) generatePhone(rng *mathrand.Rand) string {
 
 func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathrand.Rand) (string, error) {
 	// Enhanced pattern generation with specific pattern recognition
-	
+
 	// Handle common e-commerce patterns
 	switch pattern {
 	case "^[A-Z]{2}[0-9]{6}$":
@@ -348,43 +348,43 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			result[i] = rune('0' + rng.Intn(10))
 		}
 		return string(result), nil
-		
+
 	case "^PRD[0-9]{8}$":
 		// Product ID format: PRD + 8 digits
 		return fmt.Sprintf("PRD%08d", rng.Intn(100000000)), nil
-		
+
 	case "^PRD-[0-9]{6}$":
 		// Product ID format: PRD- + 6 digits
 		return fmt.Sprintf("PRD-%06d", rng.Intn(1000000)), nil
-		
+
 	case "^WH[0-9]{3}$":
 		// Warehouse format: WH + 3 digits
 		return fmt.Sprintf("WH%03d", rng.Intn(1000)), nil
-		
+
 	case "^SUP[0-9]{5}$":
 		// Supplier format: SUP + 5 digits
 		return fmt.Sprintf("SUP%05d", rng.Intn(100000)), nil
-		
+
 	case "^TXN-[0-9]{10}$":
 		// Transaction ID format: TXN- + 10 digits
 		return fmt.Sprintf("TXN-%010d", rng.Intn(1000000000)), nil
-		
+
 	case "^[0-9]{10}$":
 		// 10 digit number (account numbers, NPI)
 		return fmt.Sprintf("%010d", rng.Intn(1000000000)), nil
-		
+
 	case "^[0-9]{9}$":
 		// 9 digit number (routing numbers)
 		return fmt.Sprintf("%09d", rng.Intn(1000000000)), nil
-		
+
 	case "^[0-9]{4}$":
 		// 4 digit number (MCC codes)
 		return fmt.Sprintf("%04d", rng.Intn(10000)), nil
-		
+
 	case "^[0-9]{5}$":
 		// 5 digit number (procedure codes)
 		return fmt.Sprintf("%05d", rng.Intn(100000)), nil
-		
+
 	case "^[A-Z][0-9]{2}\\.[0-9]{1,2}$":
 		// ICD-10 format: Letter + 2 digits + dot + 1-2 digits
 		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -392,7 +392,7 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 		first := rng.Intn(100)
 		second := rng.Intn(100)
 		return fmt.Sprintf("%c%02d.%02d", letter, first, second), nil
-		
+
 	case "^[A-Z]{2}-[A-Z]{3}-[0-9]{3}$":
 		// Warehouse location format: XX-XXX-000
 		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -406,14 +406,14 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 		result[6] = '-'
 		result[7] = rune('0' + rng.Intn(10))
 		result[8] = rune('0' + rng.Intn(10))
-		result = append(result, rune('0' + rng.Intn(10)))
+		result = append(result, rune('0'+rng.Intn(10)))
 		return string(result), nil
-		
+
 	// X12 EDI specific patterns
 	case "^PO[0-9]{8}$":
 		// Purchase Order format: PO + 8 digits
 		return fmt.Sprintf("PO%08d", rng.Intn(100000000)), nil
-		
+
 	case "^[A-Z0-9]{2,15}$":
 		// Party ID format: 2-15 alphanumeric characters
 		length := 2 + rng.Intn(14) // 2-15 characters
@@ -423,7 +423,7 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			result[i] = rune(charset[rng.Intn(len(charset))])
 		}
 		return string(result), nil
-		
+
 	case "^[A-Z0-9]{6,20}$":
 		// Product ID format: 6-20 alphanumeric characters
 		length := 6 + rng.Intn(15) // 6-20 characters
@@ -433,7 +433,7 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			result[i] = rune(charset[rng.Intn(len(charset))])
 		}
 		return string(result), nil
-		
+
 	case "^MPN[A-Z0-9]{8,15}$":
 		// Manufacturer Part Number format: MPN + 8-15 alphanumeric
 		length := 8 + rng.Intn(8) // 8-15 characters after MPN
@@ -443,14 +443,14 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			result += string(charset[rng.Intn(len(charset))])
 		}
 		return result, nil
-		
+
 	case "^[A-Z]{2}$":
 		// 2-letter state/country code
 		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-		return fmt.Sprintf("%c%c", 
-			letters[rng.Intn(len(letters))], 
+		return fmt.Sprintf("%c%c",
+			letters[rng.Intn(len(letters))],
 			letters[rng.Intn(len(letters))]), nil
-			
+
 	case "^[0-9]{5}(-[0-9]{4})?$":
 		// ZIP code format: 5 digits or ZIP+4
 		zip5 := fmt.Sprintf("%05d", rng.Intn(100000))
@@ -459,41 +459,67 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			return fmt.Sprintf("%s-%s", zip5, zip4), nil
 		}
 		return zip5, nil
-		
+
 	// Medical/Pharmacy specific patterns
 	case "^RX[0-9]{8}$":
-		// Prescription number format: RX + 8 digits
 		return fmt.Sprintf("RX%08d", rng.Intn(100000000)), nil
-		
 	case "^[0-9]{5}-[0-9]{4}-[0-9]{2}$":
-		// NDC (National Drug Code) format: 5-4-2 digits
-		return fmt.Sprintf("%05d-%04d-%02d", 
-			rng.Intn(100000), 
-			rng.Intn(10000), 
-			rng.Intn(100)), nil
-			
+		// NDC code format
+		return fmt.Sprintf("%05d-%04d-%02d",
+			rng.Intn(100000), rng.Intn(10000), rng.Intn(100)), nil
 	case "^[A-Z]{2}[0-9]{7}$":
-		// DEA number format: 2 letters + 7 digits
-		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-		return fmt.Sprintf("%c%c%07d", 
-			letters[rng.Intn(len(letters))], 
-			letters[rng.Intn(len(letters))], 
-			rng.Intn(10000000)), nil
-			
+		// DEA number format
+		letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		return fmt.Sprintf("%c%c%07d",
+			letters[rng.Intn(26)], letters[rng.Intn(26)], rng.Intn(10000000)), nil
 	case "^PA[0-9]{8}$":
-		// Prior authorization format: PA + 8 digits
+		// Prior authorization number
 		return fmt.Sprintf("PA%08d", rng.Intn(100000000)), nil
-		
+	case "^INS[0-9]{6}$":
+		// Insurance ID format
+		return fmt.Sprintf("INS%06d", rng.Intn(1000000)), nil
+
+	// Healthcare Claims 837 patterns
+	case "^CLM[0-9]{10}$":
+		// Claim control number
+		return fmt.Sprintf("CLM%010d", rng.Intn(10000000000)), nil
 	case "^[A-Z0-9]{8,15}$":
-		// Insurance plan/member ID format: 8-15 alphanumeric
+		// Insurance member ID
+		chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 		length := 8 + rng.Intn(8) // 8-15 characters
-		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-		result := make([]rune, length)
+		result := make([]byte, length)
 		for i := range result {
-			result[i] = rune(charset[rng.Intn(len(charset))])
+			result[i] = chars[rng.Intn(len(chars))]
 		}
 		return string(result), nil
-		
+	case "^[0-9]{2}-[0-9]{7}$":
+		// Federal Tax ID format
+		return fmt.Sprintf("%02d-%07d", rng.Intn(100), rng.Intn(10000000)), nil
+	case "^[A-Z0-9]{5,10}$":
+		// Payer ID
+		chars := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		length := 5 + rng.Intn(6) // 5-10 characters
+		result := make([]byte, length)
+		for i := range result {
+			result[i] = chars[rng.Intn(len(chars))]
+		}
+		return string(result), nil
+	case "^[A-Z][0-9]{2}\\.[0-9A-Z]{1,4}$":
+		// ICD-10 diagnosis code format
+		letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		digits := "0123456789"
+		alphanumeric := "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		suffixLength := 1 + rng.Intn(4) // 1-4 characters
+		suffix := make([]byte, suffixLength)
+		for i := range suffix {
+			suffix[i] = alphanumeric[rng.Intn(len(alphanumeric))]
+		}
+		return fmt.Sprintf("%c%c%c.%s",
+			letters[rng.Intn(26)],
+			digits[rng.Intn(10)],
+			digits[rng.Intn(10)],
+			string(suffix)), nil
+
 	case "^[A-Z0-9]{6,12}$":
 		// Insurance group number format: 6-12 alphanumeric
 		length := 6 + rng.Intn(7) // 6-12 characters
@@ -503,11 +529,11 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			result[i] = rune(charset[rng.Intn(len(charset))])
 		}
 		return string(result), nil
-		
+
 	case "^[0-9]{6}$":
 		// BIN (Bank Identification Number) format: 6 digits
 		return fmt.Sprintf("%06d", rng.Intn(1000000)), nil
-		
+
 	case "^[A-Z0-9]{3,10}$":
 		// PCN (Processor Control Number) format: 3-10 alphanumeric
 		length := 3 + rng.Intn(8) // 3-10 characters
@@ -524,7 +550,7 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 		// Mixed alphanumeric pattern
 		return g.generateMixedPattern(pattern, rng)
 	}
-	
+
 	if strings.Contains(pattern, "[0-9]") {
 		// Numeric pattern - extract length from pattern
 		length := g.extractNumericLength(pattern)

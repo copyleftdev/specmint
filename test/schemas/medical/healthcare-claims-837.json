@@ -1,0 +1,470 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "837 Healthcare Claims",
+  "description": "X12 EDI 837 Healthcare Claims transaction set with comprehensive medical coding and LLM enrichment",
+  "type": "object",
+  "required": [
+    "transaction_set_id",
+    "claim_control_number",
+    "claim_type",
+    "service_date",
+    "total_claim_amount",
+    "patient",
+    "subscriber",
+    "billing_provider",
+    "service_lines"
+  ],
+  "properties": {
+    "transaction_set_id": {
+      "type": "string",
+      "const": "837",
+      "description": "X12 Transaction Set ID - 837 for Healthcare Claims"
+    },
+    "claim_control_number": {
+      "type": "string",
+      "pattern": "^CLM[0-9]{10}$",
+      "description": "Unique claim control number format: CLM + 10 digits",
+      "examples": ["CLM1234567890", "CLM9876543210"]
+    },
+    "claim_type": {
+      "type": "string",
+      "enum": ["P", "I", "D"],
+      "description": "Claim type: P=Professional, I=Institutional, D=Dental"
+    },
+    "claim_frequency": {
+      "type": "string",
+      "enum": ["1", "7", "8"],
+      "description": "Claim frequency: 1=Original, 7=Replacement, 8=Void"
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Primary service date for the claim"
+    },
+    "total_claim_amount": {
+      "type": "number",
+      "minimum": 10.00,
+      "maximum": 100000.00,
+      "multipleOf": 0.01,
+      "description": "Total claim amount ($10.00-$100,000.00)"
+    },
+    "patient": {
+      "type": "object",
+      "required": ["patient_id", "first_name", "last_name", "date_of_birth", "gender", "address"],
+      "properties": {
+        "patient_id": {
+          "type": "string",
+          "pattern": "^[0-9]{9}$",
+          "description": "Patient identifier (9-digit format for synthetic data)"
+        },
+        "first_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "description": "Patient first name",
+          "enum": ["John", "Sarah", "Michael", "Emily", "David", "Lisa", "Robert", "Jennifer", "Christopher", "Jessica", "Matthew", "Ashley", "Joshua", "Amanda", "Daniel", "Stephanie"]
+        },
+        "last_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "description": "Patient last name",
+          "enum": ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez", "Moore"]
+        },
+        "date_of_birth": {
+          "type": "string",
+          "format": "date",
+          "description": "Patient date of birth (YYYY-MM-DD)"
+        },
+        "gender": {
+          "type": "string",
+          "enum": ["M", "F", "U"],
+          "description": "Patient gender: M=Male, F=Female, U=Unknown"
+        },
+        "address": {
+          "type": "object",
+          "required": ["street", "city", "state", "zip"],
+          "properties": {
+            "street": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 55,
+              "description": "Patient street address",
+              "enum": ["123 Main Street", "456 Oak Avenue", "789 Elm Drive", "321 Pine Road", "654 Maple Lane", "987 Cedar Court", "246 Birch Boulevard", "135 Willow Way"]
+            },
+            "city": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 30,
+              "description": "US city name",
+              "enum": ["Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Jacksonville", "Fort Worth", "Columbus"]
+            },
+            "state": {
+              "type": "string",
+              "enum": ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"],
+              "description": "Valid US state code"
+            },
+            "zip": {
+              "type": "string",
+              "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+              "description": "5-digit ZIP or ZIP+4 format"
+            }
+          }
+        }
+      }
+    },
+    "subscriber": {
+      "type": "object",
+      "required": ["member_id", "first_name", "last_name", "relationship_to_patient"],
+      "properties": {
+        "member_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{8,15}$",
+          "description": "Insurance member identifier"
+        },
+        "first_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "description": "Subscriber first name",
+          "enum": ["John", "Sarah", "Michael", "Emily", "David", "Lisa", "Robert", "Jennifer", "Christopher", "Jessica", "Matthew", "Ashley", "Joshua", "Amanda", "Daniel", "Stephanie"]
+        },
+        "last_name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 35,
+          "description": "Subscriber last name",
+          "enum": ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Wilson", "Martinez", "Anderson", "Taylor", "Thomas", "Hernandez", "Moore"]
+        },
+        "relationship_to_patient": {
+          "type": "string",
+          "enum": ["18", "01", "19", "20", "21"],
+          "description": "Relationship: 18=Self, 01=Spouse, 19=Child, 20=Employee, 21=Unknown"
+        },
+        "group_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{6,12}$",
+          "description": "Insurance group number"
+        }
+      }
+    },
+    "billing_provider": {
+      "type": "object",
+      "required": ["npi", "name", "taxonomy_code", "address"],
+      "properties": {
+        "npi": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$",
+          "description": "National Provider Identifier - 10 digits"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 60,
+          "description": "Provider organization or individual name",
+          "examples": ["Metro General Hospital", "Springfield Medical Center", "Dr. Sarah Johnson, MD", "Westside Family Practice"]
+        },
+        "taxonomy_code": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$",
+          "description": "Healthcare Provider Taxonomy Code - 10 digits",
+          "examples": ["207Q00000X", "208D00000X", "261QF0400X"]
+        },
+        "tax_id": {
+          "type": "string",
+          "pattern": "^[0-9]{2}-[0-9]{7}$",
+          "description": "Federal Tax ID format: XX-XXXXXXX"
+        },
+        "address": {
+          "type": "object",
+          "required": ["street", "city", "state", "zip"],
+          "properties": {
+            "street": {
+              "type": "string",
+              "minLength": 5,
+              "maxLength": 55,
+              "description": "Provider street address",
+              "examples": ["1000 Medical Center Drive", "2500 Hospital Plaza", "3750 Healthcare Boulevard", "4200 Clinic Way"]
+            },
+            "city": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 30,
+              "description": "US city name",
+              "examples": ["Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+            },
+            "state": {
+              "type": "string",
+              "enum": ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"],
+              "description": "Valid US state code"
+            },
+            "zip": {
+              "type": "string",
+              "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+              "description": "5-digit ZIP or ZIP+4 format"
+            }
+          }
+        }
+      }
+    },
+    "rendering_provider": {
+      "type": "object",
+      "properties": {
+        "npi": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$",
+          "description": "Rendering provider NPI - 10 digits"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 60,
+          "description": "Rendering provider name",
+          "examples": ["Dr. Michael Chen, MD", "Dr. Emily Rodriguez, MD", "Dr. David Kim, MD", "Dr. Lisa Thompson, MD"]
+        },
+        "taxonomy_code": {
+          "type": "string",
+          "pattern": "^[0-9]{10}$",
+          "description": "Rendering provider taxonomy code"
+        }
+      }
+    },
+    "payer": {
+      "type": "object",
+      "required": ["payer_id", "name"],
+      "properties": {
+        "payer_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{5,10}$",
+          "description": "Payer identification number"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 60,
+          "description": "Insurance payer name",
+          "enum": ["Blue Cross Blue Shield", "Aetna", "UnitedHealthcare", "Cigna", "Humana", "Anthem", "Kaiser Permanente", "Molina Healthcare"]
+        }
+      }
+    },
+    "diagnosis_codes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["code", "description"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "ICD-10 diagnosis code format: Letter + 2 digits + dot + 1-4 alphanumeric",
+            "enum": ["Z51.11", "C78.00", "R50.9", "M79.3", "E11.9", "I10", "E78.5", "Z00.00", "M25.50", "F32.9", "K21.9", "N39.0", "J44.1", "G47.00", "H52.4"]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200,
+            "description": "llm: Generate a realistic medical diagnosis description that matches the ICD-10 code pattern and represents a clinically plausible condition",
+            "x-llm": true
+          },
+          "pointer": {
+            "type": "string",
+            "enum": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"],
+            "description": "Diagnosis pointer for linking to service lines"
+          }
+        }
+      }
+    },
+    "service_lines": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": ["line_number", "procedure_code", "procedure_description", "service_date", "units", "charge_amount"],
+        "properties": {
+          "line_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50,
+            "description": "Service line number (1-50)"
+          },
+          "procedure_code": {
+            "type": "string",
+            "description": "CPT procedure code - 5 digits",
+            "enum": ["99213", "99214", "99215", "99212", "99211", "36415", "80053", "93000", "85025", "80061", "73060", "71020", "76700", "93306", "45378"]
+          },
+          "procedure_description": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200,
+            "description": "llm: Generate a realistic medical procedure description that matches the CPT code pattern and represents a clinically appropriate service",
+            "x-llm": true
+          },
+          "modifier_1": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]{2}$",
+            "description": "CPT modifier (2 characters)",
+            "examples": ["25", "59", "TC", "26", "50"]
+          },
+          "modifier_2": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]{2}$",
+            "description": "Second CPT modifier (2 characters)"
+          },
+          "service_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of service for this line item"
+          },
+          "place_of_service": {
+            "type": "string",
+            "enum": ["11", "21", "22", "23", "31", "32", "49", "81", "99"],
+            "description": "Place of service: 11=Office, 21=Inpatient Hospital, 22=Outpatient Hospital, 23=Emergency Room, etc."
+          },
+          "units": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 999,
+            "description": "Number of units/services provided"
+          },
+          "charge_amount": {
+            "type": "number",
+            "minimum": 5.00,
+            "maximum": 50000.00,
+            "multipleOf": 0.01,
+            "description": "Charge amount for this service line"
+          },
+          "diagnosis_pointers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "enum": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"],
+              "description": "Diagnosis pointer linking to diagnosis codes"
+            }
+          },
+          "rendering_provider_npi": {
+            "type": "string",
+            "pattern": "^[0-9]{10}$",
+            "description": "NPI of provider who rendered this service"
+          }
+        }
+      }
+    },
+    "claim_note": {
+      "type": "string",
+      "maxLength": 80,
+      "description": "llm: Generate a brief, professional claim note or comment relevant to the medical services provided",
+      "x-llm": true
+    },
+    "prior_authorization": {
+      "type": "object",
+      "properties": {
+        "number": {
+          "type": "string",
+          "pattern": "^PA[0-9]{8}$",
+          "description": "Prior authorization number format: PA + 8 digits"
+        },
+        "effective_date": {
+          "type": "string",
+          "format": "date",
+          "description": "Prior authorization effective date"
+        }
+      }
+    },
+    "ambulance_info": {
+      "type": "object",
+      "properties": {
+        "transport_reason": {
+          "type": "string",
+          "enum": ["A", "B", "C", "D", "E"],
+          "description": "Ambulance transport reason code"
+        },
+        "pickup_location": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Ambulance pickup location",
+          "examples": ["123 Main St, Chicago IL", "Emergency Scene Highway 101", "Metro General Hospital"]
+        },
+        "dropoff_location": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Ambulance dropoff location",
+          "examples": ["Springfield Medical Center", "City General Hospital ER", "Regional Trauma Center"]
+        }
+      }
+    }
+  },
+  "x-cross-field-rules": [
+    {
+      "name": "total_claim_amount_calculation",
+      "description": "Total claim amount should equal sum of all service line charges",
+      "fields": ["total_claim_amount", "service_lines"],
+      "rule": "comparison",
+      "constraint": "total_claim_amount >= sum(service_lines.charge_amount) * 0.95",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "total_claim_amount",
+        "value": "sum(service_lines.charge_amount)"
+      }
+    },
+    {
+      "name": "service_date_consistency",
+      "description": "Service line dates should be on or before claim service date",
+      "fields": ["service_date", "service_lines"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "service_lines.service_date",
+        "params": {
+          "adjustment": -7
+        }
+      }
+    },
+    {
+      "name": "patient_age_validation",
+      "description": "Service date should be after patient birth date",
+      "fields": ["patient.date_of_birth", "service_date"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "service_date",
+        "params": {
+          "adjustment": 30
+        }
+      }
+    },
+    {
+      "name": "diagnosis_pointer_validation",
+      "description": "Service line diagnosis pointers must reference valid diagnosis codes",
+      "fields": ["diagnosis_codes", "service_lines"],
+      "rule": "reference_integrity",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "service_lines.diagnosis_pointers",
+        "value": "['A']"
+      }
+    },
+    {
+      "name": "realistic_charge_amounts",
+      "description": "Individual service charges should be reasonable for medical procedures",
+      "fields": ["service_lines"],
+      "rule": "comparison",
+      "constraint": "service_lines.charge_amount <= 10000.00",
+      "severity": "warning",
+      "patch": {
+        "strategy": "cap_value",
+        "target": "service_lines.charge_amount",
+        "params": {
+          "max_value": 5000.00
+        }
+      }
+    }
+  ]
+}
