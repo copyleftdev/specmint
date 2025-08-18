@@ -1,0 +1,280 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "X12 EDI 850 Purchase Order",
+  "description": "X12 EDI Transaction Set 850 - Purchase Order with synthetic data generation",
+  "type": "object",
+  "required": [
+    "transaction_set_id",
+    "transaction_control_number",
+    "purchase_order_number",
+    "purchase_order_date",
+    "buyer_party_id",
+    "seller_party_id",
+    "line_items"
+  ],
+  "properties": {
+    "transaction_set_id": {
+      "type": "string",
+      "const": "850",
+      "description": "X12 Transaction Set Identifier - always 850 for Purchase Order"
+    },
+    "transaction_control_number": {
+      "type": "string",
+      "pattern": "^[0-9]{9}$",
+      "description": "9-digit transaction control number for X12 envelope"
+    },
+    "purchase_order_number": {
+      "type": "string",
+      "pattern": "^PO[0-9]{8}$",
+      "description": "Purchase order number format: PO + 8 digits",
+      "examples": ["PO12345678", "PO87654321"]
+    },
+    "purchase_order_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Purchase order date in YYYY-MM-DD format"
+    },
+    "requested_delivery_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Requested delivery date"
+    },
+    "buyer_party_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{2,15}$",
+      "description": "Buyer party identifier (2-15 alphanumeric characters)",
+      "examples": ["BUYER001", "ACME123", "CORP456"]
+    },
+    "seller_party_id": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{2,15}$",
+      "description": "Seller party identifier (2-15 alphanumeric characters)",
+      "examples": ["VENDOR001", "SUPP789", "DIST123"]
+    },
+    "currency_code": {
+      "type": "string",
+      "enum": ["USD", "CAD", "EUR", "GBP", "JPY"],
+      "description": "ISO 4217 currency code"
+    },
+    "payment_terms": {
+      "type": "string",
+      "enum": ["NET30", "NET60", "NET90", "2/10NET30", "COD", "PREPAID"],
+      "description": "Payment terms code"
+    },
+    "shipping_method": {
+      "type": "string",
+      "enum": ["GROUND", "AIR", "OCEAN", "RAIL", "TRUCK", "COURIER"],
+      "description": "Shipping method code"
+    },
+    "total_amount": {
+      "type": "number",
+      "minimum": 1.00,
+      "maximum": 50000.00,
+      "multipleOf": 0.01,
+      "description": "Realistic total purchase order amount ($1-$50,000)"
+    },
+    "line_items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "description": "Purchase order line items",
+      "items": {
+        "type": "object",
+        "required": [
+          "line_number",
+          "product_id",
+          "quantity_ordered",
+          "unit_price",
+          "line_total"
+        ],
+        "properties": {
+          "line_number": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9999,
+            "description": "Sequential line item number"
+          },
+          "product_id": {
+            "type": "string",
+            "pattern": "^[A-Z0-9]{6,20}$",
+            "description": "Product/SKU identifier (6-20 alphanumeric)",
+            "examples": ["PROD123456", "SKU789ABC", "ITEM001XYZ"]
+          },
+          "product_description": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 80,
+            "description": "llm: Product description for the ordered item",
+            "x-llm": true
+          },
+          "quantity_ordered": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000,
+            "description": "Realistic quantity ordered (1-1000 units)"
+          },
+          "unit_of_measure": {
+            "type": "string",
+            "enum": ["EA", "LB", "KG", "FT", "M", "GAL", "L", "BOX", "CASE", "PALLET"],
+            "description": "Unit of measure code"
+          },
+          "unit_price": {
+            "type": "number",
+            "minimum": 0.50,
+            "maximum": 999.99,
+            "multipleOf": 0.01,
+            "description": "Realistic unit price per item ($0.50-$999.99)"
+          },
+          "line_total": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 999999.99,
+            "multipleOf": 0.01,
+            "description": "Line total (quantity * unit_price)"
+          },
+          "requested_delivery_date": {
+            "type": "string",
+            "format": "date",
+            "description": "Line-specific delivery date"
+          },
+          "manufacturer_part_number": {
+            "type": "string",
+            "pattern": "^MPN[A-Z0-9]{8,15}$",
+            "description": "Manufacturer part number format: MPN + 8-15 alphanumeric"
+          }
+        }
+      }
+    },
+    "ship_to_address": {
+      "type": "object",
+      "required": ["name", "address_line_1", "city", "state", "postal_code", "country"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "llm: Generate a realistic company or business name for shipping",
+          "x-llm": true
+        },
+        "address_line_1": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 55,
+          "description": "Primary address line"
+        },
+        "address_line_2": {
+          "type": "string",
+          "maxLength": 55,
+          "description": "Secondary address line (optional)"
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 30,
+          "description": "City name"
+        },
+        "state": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "2-letter state/province code"
+        },
+        "postal_code": {
+          "type": "string",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+          "description": "5-digit ZIP or ZIP+4 format"
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "2-letter ISO country code"
+        }
+      }
+    },
+    "bill_to_address": {
+      "type": "object",
+      "required": ["name", "address_line_1", "city", "state", "postal_code", "country"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 60,
+          "description": "llm: Generate a realistic company or business name for billing",
+          "x-llm": true
+        },
+        "address_line_1": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 55,
+          "description": "llm: Generate a realistic street address with number and street name",
+          "x-llm": true
+        },
+        "address_line_2": {
+          "type": "string",
+          "maxLength": 55,
+          "description": "Secondary address line (optional)"
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 30,
+          "description": "City name"
+        },
+        "state": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "2-letter state/province code"
+        },
+        "postal_code": {
+          "type": "string",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+          "description": "5-digit ZIP or ZIP+4 format"
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "2-letter ISO country code"
+        }
+      }
+    }
+  },
+  "x-cross-field-rules": [
+    {
+      "name": "delivery_date_ordering",
+      "description": "Requested delivery date must be after purchase order date",
+      "fields": ["purchase_order_date", "requested_delivery_date"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "requested_delivery_date",
+        "params": {
+          "adjustment": 7
+        }
+      }
+    },
+    {
+      "name": "line_total_calculation",
+      "description": "Line total must equal quantity * unit_price",
+      "fields": ["quantity_ordered", "unit_price", "line_total"],
+      "rule": "amount_range",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "line_total",
+        "value": "quantity_ordered * unit_price"
+      }
+    },
+    {
+      "name": "total_amount_consistency",
+      "description": "Total amount should equal sum of all line totals",
+      "fields": ["line_items", "total_amount"],
+      "rule": "sum_constraint",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "total_amount",
+        "value": "sum(line_items.line_total)"
+      }
+    }
+  ]
+}

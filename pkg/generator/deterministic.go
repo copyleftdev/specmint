@@ -408,6 +408,57 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 		result[8] = rune('0' + rng.Intn(10))
 		result = append(result, rune('0' + rng.Intn(10)))
 		return string(result), nil
+		
+	// X12 EDI specific patterns
+	case "^PO[0-9]{8}$":
+		// Purchase Order format: PO + 8 digits
+		return fmt.Sprintf("PO%08d", rng.Intn(100000000)), nil
+		
+	case "^[A-Z0-9]{2,15}$":
+		// Party ID format: 2-15 alphanumeric characters
+		length := 2 + rng.Intn(14) // 2-15 characters
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]rune, length)
+		for i := range result {
+			result[i] = rune(charset[rng.Intn(len(charset))])
+		}
+		return string(result), nil
+		
+	case "^[A-Z0-9]{6,20}$":
+		// Product ID format: 6-20 alphanumeric characters
+		length := 6 + rng.Intn(15) // 6-20 characters
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]rune, length)
+		for i := range result {
+			result[i] = rune(charset[rng.Intn(len(charset))])
+		}
+		return string(result), nil
+		
+	case "^MPN[A-Z0-9]{8,15}$":
+		// Manufacturer Part Number format: MPN + 8-15 alphanumeric
+		length := 8 + rng.Intn(8) // 8-15 characters after MPN
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := "MPN"
+		for i := 0; i < length; i++ {
+			result += string(charset[rng.Intn(len(charset))])
+		}
+		return result, nil
+		
+	case "^[A-Z]{2}$":
+		// 2-letter state/country code
+		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		return fmt.Sprintf("%c%c", 
+			letters[rng.Intn(len(letters))], 
+			letters[rng.Intn(len(letters))]), nil
+			
+	case "^[0-9]{5}(-[0-9]{4})?$":
+		// ZIP code format: 5 digits or ZIP+4
+		zip5 := fmt.Sprintf("%05d", rng.Intn(100000))
+		if rng.Float32() < 0.3 { // 30% chance of ZIP+4
+			zip4 := fmt.Sprintf("%04d", rng.Intn(10000))
+			return fmt.Sprintf("%s-%s", zip5, zip4), nil
+		}
+		return zip5, nil
 	}
 
 	// Fallback: analyze pattern structure

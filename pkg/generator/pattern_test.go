@@ -65,6 +65,37 @@ func TestPatternGeneration_PropertyBased(t *testing.T) {
 			pattern: "^[A-Z]{2}-[A-Z]{3}-[0-9]{3}$",
 			regex:   regexp.MustCompile("^[A-Z]{2}-[A-Z]{3}-[0-9]{3}$"),
 		},
+		// X12 EDI patterns
+		{
+			name:    "X12_Purchase_Order",
+			pattern: "^PO[0-9]{8}$",
+			regex:   regexp.MustCompile("^PO[0-9]{8}$"),
+		},
+		{
+			name:    "X12_Party_ID_Short",
+			pattern: "^[A-Z0-9]{2,15}$",
+			regex:   regexp.MustCompile("^[A-Z0-9]{2,15}$"),
+		},
+		{
+			name:    "X12_Product_ID",
+			pattern: "^[A-Z0-9]{6,20}$",
+			regex:   regexp.MustCompile("^[A-Z0-9]{6,20}$"),
+		},
+		{
+			name:    "X12_Manufacturer_Part",
+			pattern: "^MPN[A-Z0-9]{8,15}$",
+			regex:   regexp.MustCompile("^MPN[A-Z0-9]{8,15}$"),
+		},
+		{
+			name:    "X12_State_Code",
+			pattern: "^[A-Z]{2}$",
+			regex:   regexp.MustCompile("^[A-Z]{2}$"),
+		},
+		{
+			name:    "X12_ZIP_Code",
+			pattern: "^[0-9]{5}(-[0-9]{4})?$",
+			regex:   regexp.MustCompile("^[0-9]{5}(-[0-9]{4})?$"),
+		},
 	}
 
 	generator := NewDeterministicGenerator(12345)
