@@ -459,6 +459,64 @@ func (g *DeterministicGenerator) generateFromPattern(pattern string, rng *mathra
 			return fmt.Sprintf("%s-%s", zip5, zip4), nil
 		}
 		return zip5, nil
+		
+	// Medical/Pharmacy specific patterns
+	case "^RX[0-9]{8}$":
+		// Prescription number format: RX + 8 digits
+		return fmt.Sprintf("RX%08d", rng.Intn(100000000)), nil
+		
+	case "^[0-9]{5}-[0-9]{4}-[0-9]{2}$":
+		// NDC (National Drug Code) format: 5-4-2 digits
+		return fmt.Sprintf("%05d-%04d-%02d", 
+			rng.Intn(100000), 
+			rng.Intn(10000), 
+			rng.Intn(100)), nil
+			
+	case "^[A-Z]{2}[0-9]{7}$":
+		// DEA number format: 2 letters + 7 digits
+		letters := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+		return fmt.Sprintf("%c%c%07d", 
+			letters[rng.Intn(len(letters))], 
+			letters[rng.Intn(len(letters))], 
+			rng.Intn(10000000)), nil
+			
+	case "^PA[0-9]{8}$":
+		// Prior authorization format: PA + 8 digits
+		return fmt.Sprintf("PA%08d", rng.Intn(100000000)), nil
+		
+	case "^[A-Z0-9]{8,15}$":
+		// Insurance plan/member ID format: 8-15 alphanumeric
+		length := 8 + rng.Intn(8) // 8-15 characters
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]rune, length)
+		for i := range result {
+			result[i] = rune(charset[rng.Intn(len(charset))])
+		}
+		return string(result), nil
+		
+	case "^[A-Z0-9]{6,12}$":
+		// Insurance group number format: 6-12 alphanumeric
+		length := 6 + rng.Intn(7) // 6-12 characters
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]rune, length)
+		for i := range result {
+			result[i] = rune(charset[rng.Intn(len(charset))])
+		}
+		return string(result), nil
+		
+	case "^[0-9]{6}$":
+		// BIN (Bank Identification Number) format: 6 digits
+		return fmt.Sprintf("%06d", rng.Intn(1000000)), nil
+		
+	case "^[A-Z0-9]{3,10}$":
+		// PCN (Processor Control Number) format: 3-10 alphanumeric
+		length := 3 + rng.Intn(8) // 3-10 characters
+		charset := "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+		result := make([]rune, length)
+		for i := range result {
+			result[i] = rune(charset[rng.Intn(len(charset))])
+		}
+		return string(result), nil
 	}
 
 	// Fallback: analyze pattern structure

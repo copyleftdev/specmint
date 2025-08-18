@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "NCPDP D.0 Pharmacy Claims",
+  "description": "Medical prescription drug claims following NCPDP D.0 standard with LLM enrichment optimization",
+  "type": "object",
+  "required": [
+    "transaction_code",
+    "prescription_number",
+    "service_date",
+    "patient_id",
+    "prescriber_id",
+    "pharmacy_npi",
+    "drug_ndc",
+    "quantity_dispensed",
+    "days_supply",
+    "ingredient_cost",
+    "total_amount_paid"
+  ],
+  "properties": {
+    "transaction_code": {
+      "type": "string",
+      "const": "B1",
+      "description": "NCPDP Transaction Code - B1 for Billing Request"
+    },
+    "prescription_number": {
+      "type": "string",
+      "pattern": "^RX[0-9]{8}$",
+      "description": "Prescription number format: RX + 8 digits",
+      "examples": ["RX12345678", "RX87654321"]
+    },
+    "service_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date prescription was dispensed"
+    },
+    "patient_id": {
+      "type": "string",
+      "pattern": "^[0-9]{9}$",
+      "description": "Patient identifier (9-digit SSN format for synthetic data)"
+    },
+    "patient_first_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35,
+      "description": "Patient first name",
+      "examples": ["John", "Sarah", "Michael", "Emily", "David"]
+    },
+    "patient_last_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 35,
+      "description": "Patient last name",
+      "examples": ["Smith", "Johnson", "Williams", "Brown", "Jones"]
+    },
+    "patient_date_of_birth": {
+      "type": "string",
+      "format": "date",
+      "description": "Patient date of birth (YYYY-MM-DD)"
+    },
+    "patient_gender": {
+      "type": "string",
+      "enum": ["M", "F", "U"],
+      "description": "Patient gender: M=Male, F=Female, U=Unknown"
+    },
+    "patient_address": {
+      "type": "object",
+      "required": ["street", "city", "state", "zip"],
+      "properties": {
+        "street": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 55,
+          "description": "Patient street address",
+          "examples": ["123 Main Street", "456 Oak Avenue", "789 Elm Drive", "321 Pine Road", "654 Maple Lane"]
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 30,
+          "description": "US city name",
+          "examples": ["Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"],
+          "description": "Valid US state code"
+        },
+        "zip": {
+          "type": "string",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+          "description": "5-digit ZIP or ZIP+4 format"
+        }
+      }
+    },
+    "prescriber_id": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$",
+      "description": "Prescriber NPI (National Provider Identifier) - 10 digits"
+    },
+    "prescriber_name": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 60,
+      "description": "Prescribing doctor name",
+      "examples": ["Dr. Sarah Johnson, MD", "Dr. Michael Chen, MD", "Dr. Emily Rodriguez, MD", "Dr. David Kim, MD", "Dr. Lisa Thompson, MD"]
+    },
+    "prescriber_dea": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{7}$",
+      "description": "DEA number format: 2 letters + 7 digits"
+    },
+    "pharmacy_npi": {
+      "type": "string",
+      "pattern": "^[0-9]{10}$",
+      "description": "Pharmacy NPI (National Provider Identifier) - 10 digits"
+    },
+    "pharmacy_name": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 60,
+      "description": "Pharmacy name",
+      "examples": ["CVS Pharmacy #1234", "Walgreens Store 5678", "Rite Aid #9012", "Springfield Pharmacy", "Community Drug Store"]
+    },
+    "pharmacy_address": {
+      "type": "object",
+      "required": ["street", "city", "state", "zip"],
+      "properties": {
+        "street": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 55,
+          "description": "Pharmacy street address",
+          "examples": ["1000 Commerce Plaza", "2500 Medical Center Drive", "3750 Shopping Center Blvd", "4200 Main Street", "5100 Healthcare Way"]
+        },
+        "city": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 30,
+          "description": "US city name",
+          "examples": ["Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose"]
+        },
+        "state": {
+          "type": "string",
+          "enum": ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"],
+          "description": "Valid US state code"
+        },
+        "zip": {
+          "type": "string",
+          "pattern": "^[0-9]{5}(-[0-9]{4})?$",
+          "description": "5-digit ZIP or ZIP+4 format"
+        }
+      }
+    },
+    "drug_ndc": {
+      "type": "string",
+      "pattern": "^[0-9]{5}-[0-9]{4}-[0-9]{2}$",
+      "description": "NDC (National Drug Code) format: 5-4-2 digits",
+      "examples": ["12345-6789-01", "54321-9876-02"]
+    },
+    "drug_name": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 100,
+      "description": "llm: Generate a realistic prescription drug name (brand or generic, e.g., 'Lisinopril 10mg tablets', 'Metformin HCl 500mg')",
+      "x-llm": true
+    },
+    "drug_strength": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 20,
+      "description": "Drug strength and unit",
+      "examples": ["10mg", "25mg", "50mg", "100mg", "200mg", "500mg", "1000mg", "5mcg", "25mcg", "0.5mg"]
+    },
+    "drug_form": {
+      "type": "string",
+      "enum": ["TABLET", "CAPSULE", "LIQUID", "INJECTION", "CREAM", "OINTMENT", "INHALER", "PATCH", "DROPS", "SUPPOSITORY"],
+      "description": "Drug dosage form"
+    },
+    "quantity_dispensed": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 180,
+      "description": "Realistic quantity dispensed (1-180 units)"
+    },
+    "days_supply": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 90,
+      "description": "Days supply (1-90 days for most prescriptions)"
+    },
+    "refills_remaining": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 11,
+      "description": "Number of refills remaining (0-11)"
+    },
+    "diagnosis_code": {
+      "type": "string",
+      "pattern": "^[A-Z][0-9]{2}\\.[0-9]{1,2}$",
+      "description": "ICD-10 diagnosis code format: Letter + 2 digits + dot + 1-2 digits"
+    },
+    "diagnosis_description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200,
+      "description": "llm: Generate a realistic medical diagnosis description that matches common prescription needs (e.g., 'Essential hypertension', 'Type 2 diabetes mellitus')",
+      "x-llm": true
+    },
+    "ingredient_cost": {
+      "type": "number",
+      "minimum": 0.50,
+      "maximum": 2000.00,
+      "multipleOf": 0.01,
+      "description": "Realistic ingredient cost ($0.50-$2000.00)"
+    },
+    "dispensing_fee": {
+      "type": "number",
+      "minimum": 0.00,
+      "maximum": 25.00,
+      "multipleOf": 0.01,
+      "description": "Pharmacy dispensing fee ($0.00-$25.00)"
+    },
+    "patient_copay": {
+      "type": "number",
+      "minimum": 0.00,
+      "maximum": 500.00,
+      "multipleOf": 0.01,
+      "description": "Patient copayment amount ($0.00-$500.00)"
+    },
+    "insurance_paid": {
+      "type": "number",
+      "minimum": 0.00,
+      "maximum": 2000.00,
+      "multipleOf": 0.01,
+      "description": "Amount paid by insurance ($0.00-$2000.00)"
+    },
+    "total_amount_paid": {
+      "type": "number",
+      "minimum": 0.50,
+      "maximum": 2000.00,
+      "multipleOf": 0.01,
+      "description": "Total amount paid (ingredient + dispensing fee)"
+    },
+    "insurance_info": {
+      "type": "object",
+      "required": ["plan_id", "group_number", "member_id"],
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{8,15}$",
+          "description": "Insurance plan identifier"
+        },
+        "plan_name": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 60,
+          "description": "Insurance plan name",
+          "examples": ["Blue Cross Blue Shield PPO", "Aetna Better Health", "UnitedHealthcare Choice", "Cigna HealthCare", "Humana Gold Plus"]
+        },
+        "group_number": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{6,12}$",
+          "description": "Insurance group number"
+        },
+        "member_id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{8,15}$",
+          "description": "Insurance member identifier"
+        },
+        "bin": {
+          "type": "string",
+          "pattern": "^[0-9]{6}$",
+          "description": "Bank Identification Number for pharmacy claims"
+        },
+        "pcn": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{3,10}$",
+          "description": "Processor Control Number"
+        }
+      }
+    },
+    "submission_clarification_code": {
+      "type": "string",
+      "enum": ["01", "02", "03", "04", "05", "06", "07", "08", "09"],
+      "description": "Submission clarification code (01=Not specified, 02=Vacation supply, etc.)"
+    },
+    "prior_authorization_number": {
+      "type": "string",
+      "pattern": "^PA[0-9]{8}$",
+      "description": "Prior authorization number format: PA + 8 digits"
+    },
+    "compound_code": {
+      "type": "string",
+      "enum": ["0", "1", "2"],
+      "description": "Compound code: 0=Not compound, 1=Compound, 2=Modifier compound"
+    },
+    "daw_code": {
+      "type": "string",
+      "enum": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+      "description": "Dispense As Written code: 0=No substitution, 1=Substitution allowed-generic, etc."
+    }
+  },
+  "x-cross-field-rules": [
+    {
+      "name": "total_amount_calculation",
+      "description": "Total amount should equal ingredient cost plus dispensing fee",
+      "fields": ["ingredient_cost", "dispensing_fee", "total_amount_paid"],
+      "rule": "comparison",
+      "constraint": "total_amount_paid >= ingredient_cost + dispensing_fee",
+      "severity": "error",
+      "patch": {
+        "strategy": "set_value",
+        "target": "total_amount_paid",
+        "value": "ingredient_cost + dispensing_fee"
+      }
+    },
+    {
+      "name": "payment_balance",
+      "description": "Patient copay plus insurance paid should equal total amount",
+      "fields": ["patient_copay", "insurance_paid", "total_amount_paid"],
+      "rule": "comparison",
+      "constraint": "patient_copay + insurance_paid >= total_amount_paid * 0.95",
+      "severity": "warning",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "insurance_paid",
+        "params": {
+          "adjustment": "total_amount_paid - patient_copay"
+        }
+      }
+    },
+    {
+      "name": "realistic_days_supply",
+      "description": "Days supply should be reasonable for quantity dispensed",
+      "fields": ["quantity_dispensed", "days_supply"],
+      "rule": "comparison",
+      "constraint": "days_supply <= quantity_dispensed",
+      "severity": "warning",
+      "patch": {
+        "strategy": "set_value",
+        "target": "days_supply",
+        "value": "min(quantity_dispensed, 30)"
+      }
+    },
+    {
+      "name": "patient_age_validation",
+      "description": "Service date should be after patient birth date",
+      "fields": ["patient_date_of_birth", "service_date"],
+      "rule": "date_ordering",
+      "severity": "error",
+      "patch": {
+        "strategy": "adjust_field",
+        "target": "service_date",
+        "params": {
+          "adjustment": 30
+        }
+      }
+    }
+  ]
+}

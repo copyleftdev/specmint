@@ -283,52 +283,121 @@ func abs(x float64) float64 {
 
 // validateComparison validates comparison constraints between fields
 func (v *Validator) validateComparison(data map[string]interface{}, fields []string, constraint string) error {
-	if len(fields) != 2 {
-		return fmt.Errorf("comparison rule requires exactly 2 fields")
+	if len(fields) < 2 {
+		return fmt.Errorf("comparison rule requires at least 2 fields")
 	}
 
-	field1 := fields[0]
-	field2 := fields[1]
+	// Parse constraint to extract left side, operator, and right side
+	constraint = strings.TrimSpace(constraint)
 	
-	val1 := v.getNumericValue(data, field1)
-	val2 := v.getNumericValue(data, field2)
-
-	// Parse and evaluate the constraint
-	switch {
-	case strings.Contains(constraint, "<="):
-		if val1 > val2 {
-			return fmt.Errorf("%s (%f) should be <= %s (%f)", field1, val1, field2, val2)
+	var leftSide, operator, rightSide string
+	
+	// Find the operator
+	if strings.Contains(constraint, ">=") {
+		parts := strings.Split(constraint, ">=")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid constraint format: %s", constraint)
 		}
-	case strings.Contains(constraint, ">="):
-		// Handle multiplication in constraints like "price >= cost * 1.2"
-		if strings.Contains(constraint, "*") {
-			multiplier := 1.2 // default multiplier
-			if strings.Contains(constraint, "1.2") {
-				multiplier = 1.2
-			}
-			if val1 < val2*multiplier {
-				return fmt.Errorf("%s (%f) should be >= %s * %.1f (%f)", field1, val1, field2, multiplier, val2*multiplier)
-			}
-		} else {
-			if val1 < val2 {
-				return fmt.Errorf("%s (%f) should be >= %s (%f)", field1, val1, field2, val2)
-			}
+		leftSide = strings.TrimSpace(parts[0])
+		operator = ">="
+		rightSide = strings.TrimSpace(parts[1])
+	} else if strings.Contains(constraint, "<=") {
+		parts := strings.Split(constraint, "<=")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid constraint format: %s", constraint)
 		}
-	case strings.Contains(constraint, "<"):
-		if val1 >= val2 {
-			return fmt.Errorf("%s (%f) should be < %s (%f)", field1, val1, field2, val2)
+		leftSide = strings.TrimSpace(parts[0])
+		operator = "<="
+		rightSide = strings.TrimSpace(parts[1])
+	} else if strings.Contains(constraint, ">") {
+		parts := strings.Split(constraint, ">")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid constraint format: %s", constraint)
 		}
-	case strings.Contains(constraint, ">"):
-		if val1 <= val2 {
-			return fmt.Errorf("%s (%f) should be > %s (%f)", field1, val1, field2, val2)
+		leftSide = strings.TrimSpace(parts[0])
+		operator = ">"
+		rightSide = strings.TrimSpace(parts[1])
+	} else if strings.Contains(constraint, "<") {
+		parts := strings.Split(constraint, "<")
+		if len(parts) != 2 {
+			return fmt.Errorf("invalid constraint format: %s", constraint)
 		}
-	case strings.Contains(constraint, "=="):
-		if val1 != val2 {
-			return fmt.Errorf("%s (%f) should equal %s (%f)", field1, val1, field2, val2)
+		leftSide = strings.TrimSpace(parts[0])
+		operator = "<"
+		rightSide = strings.TrimSpace(parts[1])
+	} else {
+		return fmt.Errorf("unsupported comparison operator in constraint: %s", constraint)
+	}
+	
+	// Evaluate left side
+	leftValue := v.evaluateExpression(data, leftSide)
+	
+	// Evaluate right side
+	rightValue := v.evaluateExpression(data, rightSide)
+	
+	// Apply comparison
+	switch operator {
+	case ">=":
+		if leftValue < rightValue {
+			return fmt.Errorf("constraint violation: %s (%.6f) should be >= %s (%.6f)", leftSide, leftValue, rightSide, rightValue)
 		}
-	default:
-		return fmt.Errorf("unsupported constraint: %s", constraint)
+	case "<=":
+		if leftValue > rightValue {
+			return fmt.Errorf("constraint violation: %s (%.6f) should be <= %s (%.6f)", leftSide, leftValue, rightSide, rightValue)
+		}
+	case ">":
+		if leftValue <= rightValue {
+			return fmt.Errorf("constraint violation: %s (%.6f) should be > %s (%.6f)", leftSide, leftValue, rightSide, rightValue)
+		}
+	case "<":
+		if leftValue >= rightValue {
+			return fmt.Errorf("constraint violation: %s (%.6f) should be < %s (%.6f)", leftSide, leftValue, rightSide, rightValue)
+		}
 	}
 
 	return nil
+}
+
+// evaluateExpression evaluates a mathematical expression with field references
+func (v *Validator) evaluateExpression(data map[string]interface{}, expr string) float64 {
+	expr = strings.TrimSpace(expr)
+	
+	// Handle simple field reference
+	if !strings.Contains(expr, "+") && !strings.Contains(expr, "-") && !strings.Contains(expr, "*") && !strings.Contains(expr, "/") {
+		return v.getNumericValue(data, expr)
+	}
+	
+	// Handle addition (most common case for medical constraints)
+	if strings.Contains(expr, "+") {
+		parts := strings.Split(expr, "+")
+		result := 0.0
+		for _, part := range parts {
+			part = strings.TrimSpace(part)
+			result += v.getNumericValue(data, part)
+		}
+		return result
+	}
+	
+	// Handle subtraction
+	if strings.Contains(expr, "-") {
+		parts := strings.Split(expr, "-")
+		if len(parts) == 2 {
+			left := strings.TrimSpace(parts[0])
+			right := strings.TrimSpace(parts[1])
+			return v.getNumericValue(data, left) - v.getNumericValue(data, right)
+		}
+	}
+	
+	// Handle multiplication
+	if strings.Contains(expr, "*") {
+		parts := strings.Split(expr, "*")
+		if len(parts) == 2 {
+			left := strings.TrimSpace(parts[0])
+			right := strings.TrimSpace(parts[1])
+			return v.getNumericValue(data, left) * v.getNumericValue(data, right)
+		}
+	}
+	
+	// Fallback: treat as field name
+	return v.getNumericValue(data, expr)
 }

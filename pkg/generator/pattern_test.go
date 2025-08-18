@@ -96,6 +96,47 @@ func TestPatternGeneration_PropertyBased(t *testing.T) {
 			pattern: "^[0-9]{5}(-[0-9]{4})?$",
 			regex:   regexp.MustCompile("^[0-9]{5}(-[0-9]{4})?$"),
 		},
+		// Medical/Pharmacy patterns
+		{
+			name:    "Medical_Prescription_Number",
+			pattern: "^RX[0-9]{8}$",
+			regex:   regexp.MustCompile("^RX[0-9]{8}$"),
+		},
+		{
+			name:    "Medical_NDC_Code",
+			pattern: "^[0-9]{5}-[0-9]{4}-[0-9]{2}$",
+			regex:   regexp.MustCompile("^[0-9]{5}-[0-9]{4}-[0-9]{2}$"),
+		},
+		{
+			name:    "Medical_DEA_Number",
+			pattern: "^[A-Z]{2}[0-9]{7}$",
+			regex:   regexp.MustCompile("^[A-Z]{2}[0-9]{7}$"),
+		},
+		{
+			name:    "Medical_Prior_Auth",
+			pattern: "^PA[0-9]{8}$",
+			regex:   regexp.MustCompile("^PA[0-9]{8}$"),
+		},
+		{
+			name:    "Medical_Insurance_Plan_ID",
+			pattern: "^[A-Z0-9]{8,15}$",
+			regex:   regexp.MustCompile("^[A-Z0-9]{8,15}$"),
+		},
+		{
+			name:    "Medical_Group_Number",
+			pattern: "^[A-Z0-9]{6,12}$",
+			regex:   regexp.MustCompile("^[A-Z0-9]{6,12}$"),
+		},
+		{
+			name:    "Medical_BIN_Number",
+			pattern: "^[0-9]{6}$",
+			regex:   regexp.MustCompile("^[0-9]{6}$"),
+		},
+		{
+			name:    "Medical_PCN_Number",
+			pattern: "^[A-Z0-9]{3,10}$",
+			regex:   regexp.MustCompile("^[A-Z0-9]{3,10}$"),
+		},
 	}
 
 	generator := NewDeterministicGenerator(12345)
